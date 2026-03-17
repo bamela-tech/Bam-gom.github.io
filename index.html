@@ -1,0 +1,3908 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+    <title>HSJDA | Gestion Maintenance Hospitalière</title>
+    <!-- jsPDF & EmailJS pour l'envoi d'email -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <style>
+        * { 
+            box-sizing: border-box; 
+            margin: 0; 
+            padding: 0; 
+        }
+        
+        body { 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            background: #f0f2f5; 
+            min-height: 100vh; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            padding: 15px;
+            transition: background 0.3s ease;
+        }
+        
+        /* Écran de connexion avec logo */
+        #loginOverlay { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: linear-gradient(145deg, #1e2b37, #2c3e50); 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            z-index: 9999; 
+            color: white; 
+            flex-direction: column; 
+            transition: background 0.3s ease;
+        }
+        
+        .login-box { 
+            background: rgba(255,255,255,0.95); 
+            padding: 35px 30px; 
+            border-radius: 24px; 
+            color: #2c3e50; 
+            text-align: center; 
+            box-shadow: 0 25px 40px rgba(0,0,0,0.4); 
+            width: 90%;
+            max-width: 420px;
+            backdrop-filter: blur(2px); 
+            border: 1px solid rgba(255,255,255,0.3); 
+            margin: 15px;
+        }
+        
+        .logo-container {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .hospital-logo {
+            width: 100px;
+            height: 100px;
+            background: #1e5945;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            color: white;
+            font-size: 2.5rem;
+            font-weight: bold;
+            border: 3px solid #f1c40f;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .hospital-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .hospital-logo svg {
+            width: 60px;
+            height: 60px;
+            fill: white;
+        }
+        
+        .login-box h2 { 
+            margin-bottom: 10px; 
+            font-weight: 600; 
+            color: #1e3c4f; 
+            letter-spacing: 1px; 
+            font-size: clamp(1.2rem, 5vw, 1.8rem);
+        }
+        
+        .login-box p { 
+            margin-bottom: 25px; 
+            font-size: 0.9rem; 
+            color: #2c3e50; 
+            border-bottom: 1px dashed #b0bec5; 
+            padding-bottom: 12px; 
+        }
+        
+        #passInput, #adminCodeInput { 
+            width: 100%; 
+            padding: 14px 18px; 
+            border: 2px solid #cfd8dc; 
+            border-radius: 60px; 
+            font-size: 1rem; 
+            outline: none; 
+            transition: all 0.2s; 
+            text-align: center; 
+            letter-spacing: 2px; 
+            background: #f9f9f9; 
+            margin-bottom: 10px; 
+        }
+        
+        #passInput:focus, #adminCodeInput:focus { 
+            border-color: #27ae60; 
+            box-shadow: 0 0 0 3px rgba(39,174,96,0.2); 
+        }
+        
+        .btn-login, .btn-visitor, .btn-logout { 
+            border: none; 
+            padding: 12px 20px; 
+            cursor: pointer; 
+            font-weight: 700; 
+            border-radius: 60px; 
+            font-size: 1rem; 
+            width: 100%; 
+            margin-top: 10px; 
+            transition: 0.2s; 
+            letter-spacing: 0.5px; 
+        }
+        
+        .btn-login { 
+            background: #27ae60; 
+            color: white; 
+            box-shadow: 0 4px 10px rgba(0,80,30,0.3); 
+        }
+        
+        .btn-login:hover { 
+            background: #219a52; 
+            transform: scale(1.02); 
+        }
+        
+        .btn-visitor { 
+            background: #3498db; 
+            color: white; 
+            box-shadow: 0 4px 10px rgba(0,50,80,0.3); 
+        }
+        
+        .btn-visitor:hover { 
+            background: #2980b9; 
+            transform: scale(1.02); 
+        }
+        
+        .btn-logout {
+            background: #e74c3c;
+            color: white;
+            margin-top: 20px;
+        }
+        
+        .btn-logout:hover {
+            background: #c0392b;
+        }
+        
+        #errorMsg { 
+            color: #c0392b; 
+            font-weight: 500; 
+            margin-top: 15px; 
+            display: none; 
+            background: #fbe9e7; 
+            padding: 8px; 
+            border-radius: 40px; 
+        }
+        
+        .info-mode { 
+            font-size: 0.7rem; 
+            color: #7f8c8d; 
+            margin-top: 15px; 
+            font-style: italic; 
+        }
+        
+        /* Menu principal */
+        .main-menu { 
+            display: flex; 
+            gap: 8px; 
+            margin: 15px 0; 
+            flex-wrap: wrap; 
+            background: white; 
+            padding: 12px 15px; 
+            border-radius: 60px; 
+            box-shadow: 0 5px 15px rgba(0,30,10,0.1); 
+            justify-content: center; 
+        }
+        
+        .menu-btn { 
+            background: #ecf0f1; 
+            border: none; 
+            padding: 10px 16px; 
+            border-radius: 40px; 
+            font-weight: 600; 
+            cursor: pointer; 
+            transition: 0.2s; 
+            color: #2c3e50; 
+            font-size: 0.85rem; 
+            display: flex; 
+            align-items: center; 
+            gap: 4px; 
+            flex: 0 1 auto;
+        }
+        
+        .menu-btn.active { 
+            background: #1e5945; 
+            color: white; 
+            box-shadow: 0 4px 8px rgba(0,80,30,0.3); 
+        }
+        
+        .menu-btn:hover:not(.active):not(:disabled) { 
+            background: #d5dbdb; 
+        }
+        
+        .menu-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
+        /* Interface principale avec logo */
+        .container { 
+            max-width: 1600px; 
+            width: 100%;
+            margin: 0 auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 28px; 
+            display: none; 
+            box-shadow: 0 20px 40px rgba(0,20,10,0.2); 
+            border: 1px solid #dee7e7; 
+        }
+        
+        .header-with-logo {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .app-logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .app-logo-img {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #1e5945, #2c3e50);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            box-shadow: 0 5px 10px rgba(0,50,20,0.3);
+            border: 2px solid #f1c40f;
+            overflow: hidden;
+        }
+        
+        .app-logo-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .app-logo-text h1 { 
+            color: #1e5945; 
+            font-weight: 600; 
+            letter-spacing: 1px; 
+            margin: 0;
+            font-size: clamp(1.2rem, 4vw, 2rem);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .app-logo-text h1 span { 
+            background: #2c3e50; 
+            color: #f1c40f; 
+            font-size: 0.7rem; 
+            padding: 3px 10px; 
+            border-radius: 40px; 
+            font-weight: 400; 
+        }
+        
+        .mode-badge { 
+            padding: 4px 12px; 
+            border-radius: 40px; 
+            font-size: 0.75rem; 
+            font-weight: bold; 
+            margin-left: 5px; 
+            white-space: nowrap;
+        }
+        
+        .mode-badge.admin { background: #27ae60; color: white; }
+        .mode-badge.admin-secondary { background: #2ecc71; color: white; }
+        .mode-badge.visitor { background: #3498db; color: white; }
+        .mode-badge.technicien { background: #f39c12; color: #1e3c2f; }
+        .mode-badge.service { background: #9b59b6; color: white; }
+        
+        .sous-titre { 
+            text-align: center; 
+            color: #3a5e6b; 
+            margin-bottom: 20px; 
+            font-style: italic; 
+            border-bottom: 1px solid #e0efe8; 
+            padding-bottom: 10px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 10px; 
+            flex-wrap: wrap; 
+            font-size: clamp(0.9rem, 3vw, 1.1rem);
+        }
+        
+        /* Pages */
+        .page { display: none; }
+        .page.active { display: block; }
+        
+        /* Formulaire standard */
+        .grid-form { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); 
+            gap: 10px; 
+            background: #ecf8f2; 
+            padding: 20px; 
+            border-radius: 20px; 
+            margin-bottom: 20px; 
+            border: 1px solid #c3e0d1; 
+            align-items: end; 
+        }
+        
+        .grid-form input, .grid-form select, .grid-form textarea { 
+            padding: 10px 12px; 
+            border: 1px solid #bcd9cc; 
+            border-radius: 16px; 
+            width: 100%; 
+            font-size: 0.9rem; 
+            background: white; 
+            transition: 0.15s; 
+        }
+        
+        .grid-form textarea { 
+            resize: vertical; 
+            min-height: 60px; 
+        }
+        
+        .grid-form input:focus, .grid-form select:focus, .grid-form textarea:focus { 
+            border-color: #27ae60; 
+            outline: 2px solid #b0e6c5; 
+        }
+        
+        .grid-form input:disabled, .grid-form select:disabled, .grid-form textarea:disabled { 
+            background: #f5f5f5; 
+            opacity: 0.7; 
+            cursor: not-allowed; 
+        }
+        
+        .btn-add, .btn-cancel, .btn-danger, .btn-warning, .btn-success, .btn-info, .btn-backup, .btn-restore, .btn-sync, .btn-switch-mode, .btn-return-admin, .btn-rebut, .btn-plan { 
+            border: none; 
+            padding: 12px 15px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            border-radius: 40px; 
+            font-size: 0.9rem; 
+            transition: 0.15s; 
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+        
+        .btn-add { background: #27ae60; color: white; }
+        .btn-add:hover:not(:disabled) { background: #1e8f4b; }
+        .btn-add:disabled { background: #95a5a6; cursor: not-allowed; opacity: 0.6; }
+        
+        .btn-cancel { background: #95a5a6; color: white; }
+        .btn-cancel:hover:not(:disabled) { background: #7f8c8d; }
+        
+        .btn-danger { background: #e74c3c; color: white; padding: 8px 12px; font-size: 0.8rem; }
+        .btn-danger:hover { background: #c0392b; }
+        
+        .btn-warning { background: #f39c12; color: white; padding: 8px 12px; font-size: 0.8rem; }
+        .btn-warning:hover { background: #e67e22; }
+        
+        .btn-success { background: #27ae60; color: white; padding: 8px 12px; font-size: 0.8rem; }
+        .btn-success:hover { background: #219a52; }
+        
+        .btn-info { background: #3498db; color: white; padding: 8px 12px; font-size: 0.8rem; }
+        .btn-info:hover { background: #2980b9; }
+        
+        .btn-backup { background: #2c3e50; color: white; }
+        .btn-backup:hover { background: #1a252f; }
+        
+        .btn-restore { background: #f39c12; color: white; }
+        .btn-restore:hover { background: #e67e22; }
+        
+        .btn-sync { background: #3498db; color: white; width: 100%; margin-top: 10px; }
+        .btn-sync:hover { background: #2980b9; }
+        
+        .btn-switch-mode { background: #9b59b6; color: white; }
+        .btn-switch-mode:hover { background: #8e44ad; }
+        
+        .btn-return-admin { 
+            background: #e67e22; 
+            color: white; 
+            width: 100%; 
+            margin: 10px 0;
+            font-size: 1.1rem;
+            padding: 15px;
+            border: 2px solid #d35400;
+        }
+        .btn-return-admin:hover { background: #d35400; }
+        
+        .btn-rebut { 
+            background: #7f8c8d; 
+            color: white; 
+            padding: 8px 12px; 
+            font-size: 0.8rem;
+        }
+        .btn-rebut:hover { background: #6c7a7d; }
+        
+        .btn-plan { 
+            background: #3498db; 
+            color: white; 
+            padding: 8px 12px; 
+            font-size: 0.8rem;
+        }
+        .btn-plan:hover { background: #2980b9; }
+        
+        .search-box { 
+            width: 100%; 
+            padding: 14px 20px 14px 50px; 
+            margin-bottom: 20px; 
+            border: 2px solid #27ae60; 
+            border-radius: 60px; 
+            font-size: 1rem; 
+            background: #ffffff url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%2327ae60" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>') no-repeat 15px center; 
+            background-size: 20px;
+        }
+        
+        .table-wrapper { 
+            overflow-x: auto; 
+            border-radius: 20px; 
+            border: 1px solid #cfebe0; 
+            background: white; 
+            box-shadow: 0 5px 12px rgba(0,30,10,0.05); 
+            margin-bottom: 15px; 
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            min-width: 800px; 
+        }
+        
+        th { 
+            background: #1a3b40; 
+            color: white; 
+            padding: 12px 6px; 
+            font-weight: 600; 
+            font-size: 0.75rem; 
+            text-transform: uppercase; 
+            letter-spacing: 0.3px; 
+            white-space: nowrap; 
+        }
+        
+        td { 
+            padding: 10px 6px; 
+            border-bottom: 1px solid #d6ece2; 
+            vertical-align: middle; 
+            font-size: 0.85rem; 
+        }
+        
+        tr:hover td { background-color: #f3fcf8; }
+        
+        .matricule { 
+            font-family: 'Courier New', monospace; 
+            background: #edf7f2; 
+            padding: 4px 6px; 
+            border-radius: 40px; 
+            font-weight: 600; 
+            font-size: 0.75rem; 
+            border: 1px solid #b7dacb; 
+            display: inline-block; 
+        }
+        
+        .etat-badge { 
+            display: inline-block; 
+            padding: 4px 10px; 
+            border-radius: 60px; 
+            font-weight: 600; 
+            font-size: 0.7rem; 
+            background: #d5f0de; 
+            color: #0b4b2b; 
+        }
+        
+        .etat-badge.panne { background: #fde3db; color: #b3401c; }
+        .etat-badge.rebut { background: #7f8c8d; color: white; }
+        
+        .date-small { font-size: 0.7rem; color: #2d4e5c; white-space: nowrap; }
+        
+        .action-buttons { display: flex; gap: 4px; flex-wrap: wrap; }
+        
+        .admin-section { 
+            background: #e8f4f8; 
+            padding: 20px; 
+            border-radius: 20px; 
+            margin: 20px 0; 
+            border: 1px solid #b8d9e5; 
+        }
+        
+        .admin-section h3 { 
+            color: #2c3e50; 
+            margin-bottom: 15px; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            font-size: clamp(1rem, 4vw, 1.3rem);
+        }
+        
+        .visitor-input-group { 
+            display: flex; 
+            gap: 10px; 
+            margin: 15px 0; 
+            flex-wrap: wrap; 
+        }
+        
+        .visitor-input-group input, .visitor-input-group select { 
+            flex: 1; 
+            min-width: 180px; 
+            padding: 12px; 
+            border: 1px solid #bcd9cc; 
+            border-radius: 16px; 
+            font-size: 0.9rem;
+        }
+        
+        .visitor-list { 
+            background: white; 
+            padding: 15px; 
+            border-radius: 16px; 
+            margin-top: 10px; 
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .visitor-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 10px; 
+            border-bottom: 1px solid #ecf0f1; 
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .visitor-item:last-child { border-bottom: none; }
+        
+        .visitor-code { font-family: monospace; font-weight: bold; color: #27ae60; }
+        
+        .backup-buttons { 
+            display: flex; 
+            gap: 10px; 
+            flex-wrap: wrap; 
+            margin: 15px 0; 
+        }
+        
+        .logo-upload {
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: #2c3e50;
+        }
+        
+        .logo-upload input {
+            margin-top: 5px;
+            width: 100%;
+            padding: 8px;
+        }
+        
+        .background-settings {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 16px;
+        }
+        
+        .color-picker-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin: 10px 0;
+        }
+        
+        .color-picker-group input[type="color"] {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        
+        /* Email configuration */
+        .email-config {
+            background: #f0f7fa;
+            padding: 15px;
+            border-radius: 16px;
+            margin: 15px 0;
+        }
+        
+        .email-config input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 2px solid #3498db;
+            border-radius: 30px;
+        }
+        
+        /* Urgence et statuts */
+        .urgence-haute { background-color: #fde3db; color: #c0392b; font-weight: bold; }
+        .urgence-moyenne { background-color: #fef5e7; color: #e67e22; }
+        
+        .statut-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 60px;
+            font-weight: 600;
+            font-size: 0.7rem;
+        }
+        
+        .statut-encours { background: #fef5e7; color: #e67e22; }
+        .statut-realise { background: #d5f0de; color: #0b4b2b; }
+        .statut-attente { background: #f2f3f4; color: #7f8c8d; }
+        
+        /* Alertes maintenance */
+        .alert-urgent { background-color: #fde3db; color: #c0392b; font-weight: bold; padding: 4px 8px; border-radius: 20px; }
+        .alert-proche { background-color: #fef5e7; color: #e67e22; font-weight: bold; padding: 4px 8px; border-radius: 20px; }
+        .alert-normal { background-color: #d5f0de; color: #0b4b2b; padding: 4px 8px; border-radius: 20px; }
+        
+        .maintenance-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.05);
+            border: 1px solid #e0efe8;
+            text-align: center;
+        }
+        
+        .stat-card h4 { 
+            color: #2c3e50; 
+            margin-bottom: 10px; 
+            font-size: 1rem;
+        }
+        
+        .stat-number { 
+            font-size: clamp(1.5rem, 5vw, 2.5rem); 
+            font-weight: bold; 
+            color: #1e5945; 
+        }
+        
+        .stat-percent {
+            font-size: 1.2rem;
+            color: #27ae60;
+            margin-top: 5px;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            left: 20px;
+            max-width: 400px;
+            margin: 0 auto;
+            background: #27ae60;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 10000;
+            display: none;
+            animation: slideIn 0.3s ease;
+            text-align: center;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .service-code-section {
+            background: #f5f0fa;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .service-code-section input {
+            width: 100%;
+            max-width: 250px;
+            padding: 12px;
+            border: 1px solid #9b59b6;
+            border-radius: 30px;
+            text-align: center;
+            margin: 10px 0;
+        }
+        
+        .filter-select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #27ae60;
+            border-radius: 60px;
+            margin-bottom: 20px;
+            font-size: 1rem;
+            background: white;
+        }
+        
+        .sync-status {
+            background: #edf7f2;
+            padding: 10px;
+            border-radius: 30px;
+            margin: 10px 0;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #2c3e50;
+        }
+        
+        .mode-switch-panel {
+            background: #f5f0fa;
+            padding: 15px;
+            border-radius: 16px;
+            margin: 15px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .admin-return-section {
+            margin: 15px 0;
+            padding: 10px;
+            background: #fef5e7;
+            border-radius: 60px;
+            text-align: center;
+            border: 2px solid #e67e22;
+        }
+        
+        .password-change {
+            background: #fff3e0;
+            padding: 15px;
+            border-radius: 16px;
+            margin: 15px 0;
+        }
+        
+        .password-change input {
+            padding: 10px;
+            border: 1px solid #f39c12;
+            border-radius: 30px;
+            margin: 5px;
+            width: calc(100% - 22px);
+        }
+        
+        .logs-table {
+            font-size: 0.8rem;
+        }
+        
+        .logs-table td {
+            padding: 5px;
+        }
+        
+        /* Déconnexion */
+        .logout-section {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        /* Style pour les équipements rebutés */
+        .rebut-info {
+            font-size: 0.75rem;
+            color: #7f8c8d;
+            margin-top: 2px;
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10001;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-content h3 {
+            color: #1e5945;
+            margin-bottom: 15px;
+        }
+        
+        .modal-content label {
+            display: block;
+            margin-top: 10px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .modal-content input, .modal-content select, .modal-content textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0 10px;
+            border: 2px solid #bcd9cc;
+            border-radius: 16px;
+            font-size: 0.95rem;
+        }
+        
+        .modal-content textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        .modal-content .required {
+            color: #e74c3c;
+            font-size: 0.8rem;
+            margin-left: 5px;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn-modal-confirm {
+            background: #e74c3c;
+            color: white;
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .btn-modal-confirm:hover {
+            background: #c0392b;
+        }
+        
+        .btn-modal-cancel {
+            background: #95a5a6;
+            color: white;
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .btn-modal-cancel:hover {
+            background: #7f8c8d;
+        }
+        
+        .info-badge {
+            background: #ecf0f1;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        
+        .admin-principal-badge {
+            background: #f1c40f;
+            color: #1e3c2f;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            margin-left: 5px;
+        }
+        
+        /* Styles pour les formulaires selon les rôles */
+        .form-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            border-left: 4px solid #27ae60;
+        }
+        
+        .form-section h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .role-badge {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            background: #ecf0f1;
+            margin-left: 10px;
+        }
+        
+        /* Responsive pour tablettes et mobiles */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            
+            .container { padding: 15px; }
+            
+            .main-menu {
+                border-radius: 30px;
+                padding: 10px;
+            }
+            
+            .menu-btn {
+                padding: 8px 12px;
+                font-size: 0.75rem;
+            }
+            
+            .grid-form {
+                grid-template-columns: 1fr;
+                padding: 15px;
+            }
+            
+            th, td {
+                padding: 8px 4px;
+                font-size: 0.75rem;
+            }
+            
+            .header-with-logo {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .app-logo {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .visitor-input-group {
+                flex-direction: column;
+            }
+            
+            .visitor-input-group input,
+            .visitor-input-group select,
+            .visitor-input-group button {
+                width: 100%;
+            }
+            
+            .backup-buttons {
+                flex-direction: column;
+            }
+            
+            .backup-buttons button {
+                width: 100%;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .action-buttons button {
+                width: 100%;
+                margin: 2px 0;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .login-box { padding: 25px 20px; }
+            
+            .hospital-logo {
+                width: 80px;
+                height: 80px;
+            }
+            
+            .app-logo-img {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .menu-btn {
+                padding: 6px 8px;
+                font-size: 0.7rem;
+            }
+            
+            .btn-login, .btn-visitor, .btn-logout {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ÉCRAN DE CONNEXION AVEC LOGO -->
+<div id="loginOverlay">
+    <div class="login-box">
+        <div class="logo-container">
+            <div class="hospital-logo" id="loginLogo">
+                <svg viewBox="0 0 24 24" width="60" height="60">
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 10h-4v4h-4v-4H8v-4h4V5h4v4h4v4h-4v4z" fill="white"/>
+                </svg>
+            </div>
+        </div>
+        <h2>HSJDA</h2>
+        <p>Hôpital Saint Jean de Dieu d'Afagnan</p>
+        <input type="password" id="passInput" placeholder="● Code secret ●" autofocus>
+        <button class="btn-login" onclick="verifierCode('admin')">Connexion Admin</button>
+        <button class="btn-visitor" onclick="verifierCode('visitor')">Connexion Visiteur</button>
+        <button class="btn-visitor" onclick="promptTechnicien()" style="background:#f39c12; color:#1e3c2f;">🔧 Connexion Technicien</button>
+        <button class="btn-visitor" onclick="promptService()" style="background:#9b59b6; color:white;">🏥 Connexion Service</button>
+        
+        <p id="errorMsg">⛔ Code incorrect !</p>
+        <p class="info-mode">👤 Contactez l'administrateur principal pour obtenir un code d'accès</p>
+    </div>
+</div>
+
+<!-- NOTIFICATION -->
+<div id="notification" class="notification"></div>
+
+<!-- MODAL DE MISE AU REBUT (FORMULAIRE COMPLET) -->
+<div id="rebutModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3>🗑️ Formulaire de mise au rebut</h3>
+        <div class="info-badge" id="rebutEquipInfo"></div>
+        
+        <label>📅 Date de mise au rebut <span class="required">*</span></label>
+        <input type="date" id="rebutDate" value="">
+        
+        <label>⚠️ Motif de la mise au rebut <span class="required">*</span></label>
+        <select id="rebutMotif">
+            <option value="">Sélectionner un motif</option>
+            <option value="Obsolète / Technologie dépassée">Obsolète / Technologie dépassée</option>
+            <option value="Hors service / Irréparable">Hors service / Irréparable</option>
+            <option value="Casse accidentelle">Casse accidentelle</option>
+            <option value="Fin de vie normale">Fin de vie normale</option>
+            <option value="Non conforme aux normes">Non conforme aux normes</option>
+            <option value="Panne critique répétée">Panne critique répétée</option>
+            <option value="Pièces de rechange non disponibles">Pièces de rechange non disponibles</option>
+            <option value="Remplacement programmé">Remplacement programmé</option>
+            <option value="Autre motif">Autre motif</option>
+        </select>
+        
+        <label>📝 Description détaillée de l'état <span class="required">*</span></label>
+        <textarea id="rebutDescription" placeholder="Décrire l'état de l'équipement, les problèmes constatés, les raisons précises de la mise au rebut..."></textarea>
+        
+        <label>👤 Personne responsable de la décision <span class="required">*</span></label>
+        <input type="text" id="rebutResponsable" placeholder="Nom et fonction du responsable">
+        
+        <label>🔧 Dernière intervention avant rebut</label>
+        <input type="text" id="rebutDerniereIntervention" placeholder="Date et nature de la dernière intervention (si applicable)">
+        
+        <label>💰 Valeur comptable résiduelle</label>
+        <input type="text" id="rebutValeurResiduelle" placeholder="Ex: 0 FCFA, 50 000 FCFA...">
+        
+        <label>📦 Devenir de l'équipement <span class="required">*</span></label>
+        <select id="rebutDevenir">
+            <option value="Recyclage">Recyclage</option>
+            <option value="Destruction contrôlée">Destruction contrôlée</option>
+            <option value="Don">Don à une organisation</option>
+            <option value="Vente au enchères">Vente aux enchères</option>
+            <option value="Dépôt en décharge agréée">Dépôt en décharge agréée</option>
+            <option value="Stockage temporaire">Stockage temporaire</option>
+            <option value="Retour fournisseur">Retour fournisseur</option>
+        </select>
+        
+        <label>📄 Documents associés</label>
+        <input type="text" id="rebutDocuments" placeholder="N° PV de destruction, certificat, etc.">
+        
+        <label>💬 Observations complémentaires</label>
+        <textarea id="rebutObservations" placeholder="Informations supplémentaires..."></textarea>
+        
+        <div class="modal-buttons">
+            <button class="btn-modal-confirm" onclick="confirmerMiseAuRebut()">🗑️ Confirmer la mise au rebut</button>
+            <button class="btn-modal-cancel" onclick="fermerModalRebut()">Annuler</button>
+        </div>
+    </div>
+</div>
+
+<!-- INTERFACE PRINCIPALE AVEC LOGO -->
+<div class="container" id="mainContent">
+    <div class="header-with-logo">
+        <div class="app-logo">
+            <div class="app-logo-img" id="appLogo">
+                <svg viewBox="0 0 24 24" width="40" height="40">
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 10h-4v4h-4v-4H8v-4h4V5h4v4h4v4h-4v4z" fill="white"/>
+                </svg>
+            </div>
+            <div class="app-logo-text">
+                <h1>HSJDA <span id="modeBadge" class="mode-badge admin">Mode Admin Principal</span></h1>
+            </div>
+        </div>
+        <div class="admin-only" id="adminControls" style="display: none;">
+            <div class="logo-upload" style="margin:0;">
+                <small>Changer logo :</small>
+                <input type="file" id="appLogoUpload" accept="image/*" onchange="changerLogoApp(event)" style="display:inline-block; max-width:150px;">
+            </div>
+        </div>
+    </div>
+    
+    <div class="sous-titre" id="subtitle">
+        <span>Gestion maintenance & journal d'activité</span>
+    </div>
+
+    <!-- Statut de synchronisation -->
+    <div id="syncStatus" class="sync-status">
+        <span id="syncMessage">Application indépendante - Données locales</span>
+        <span id="lastSync"></span>
+    </div>
+
+    <!-- Panneau de changement de mode pour l'admin (visible seulement en mode admin) -->
+    <div id="modeSwitchPanel" class="mode-switch-panel" style="display: none;">
+        <button class="btn-switch-mode" onclick="changerMode('technicien')">🔧 Mode Technicien</button>
+        <button class="btn-switch-mode" onclick="changerMode('visitor')">👁️ Mode Visiteur</button>
+        <button class="btn-switch-mode" onclick="changerMode('service')">🏥 Mode Service</button>
+        <button class="btn-switch-mode" onclick="changerMode('admin')" style="background:#27ae60;">👑 Mode Admin</button>
+    </div>
+
+    <!-- Bouton de retour pour l'admin quand il est dans un autre mode -->
+    <div id="adminReturnSection" class="admin-return-section" style="display: none;">
+        <button class="btn-return-admin" onclick="retourModeAdmin()">⬅ Retour au mode Administrateur</button>
+        <p style="font-size: 0.8rem; margin-top: 5px; color: #666;">(Vous êtes en mode simulation - cliquez pour revenir en mode admin)</p>
+    </div>
+
+    <!-- FILTRE SERVICE POUR MODE SERVICE -->
+    <div id="serviceFilterSection" style="display: none; margin-bottom: 15px;">
+        <select id="serviceFilter" class="filter-select" onchange="filtrerParService()">
+            <option value="">-- Voir tous les services --</option>
+        </select>
+    </div>
+
+    <!-- MENU PRINCIPAL -->
+    <div class="main-menu" id="mainMenu">
+        <button class="menu-btn active" onclick="changerRubrique('inventaire')" id="menuInventaire">📋 Inventaire</button>
+        <button class="menu-btn" onclick="changerRubrique('journal')" id="menuJournal">📓 Journal</button>
+        <button class="menu-btn" onclick="changerRubrique('besoins')" id="menuBesoins">📝 Expression besoin</button>
+        <button class="menu-btn" onclick="changerRubrique('maintenance')" id="menuMaintenance">🔧 Maintenance</button>
+        <button class="menu-btn" onclick="changerRubrique('demande')" id="menuDemande">📨 Demande service</button>
+        <button class="menu-btn" onclick="changerRubrique('rebut')" id="menuRebut">🗑️ Mis au rebut</button>
+        <button class="menu-btn" onclick="changerRubrique('planning')" id="menuPlanning">📊 Planning Maintenance</button>
+    </div>
+
+    <!-- PAGE INVENTAIRE -->
+    <div id="pageInventaire" class="page active">
+        <input type="text" id="searchInput" class="search-box" placeholder="🔍 Rechercher (matricule, nom, service...)" onkeyup="filtrer()">
+
+        <!-- Formulaire ajout/modif équipement (admin seulement) -->
+        <div class="grid-form" id="formContainer" style="display: none;">
+            <input type="text" id="nom" placeholder="Nom équipement *">
+            <select id="service" title="Service *">
+                <option value="">-- Sélectionner service --</option>
+                <option value="MATERNITÉ">Maternité</option>
+                <option value="MÉDECINE GÉNÉRALE">Médecine générale</option>
+                <option value="PHYSIOTHÉRAPIE">Physiothérapie</option>
+                <option value="CLINIQUE">Clinique</option>
+                <option value="PÉDIATRIE">Pédiatrie</option>
+                <option value="NÉONATOLOGIE">Néonatologie</option>
+                <option value="LABORATOIRE">Laboratoire</option>
+                <option value="RADIOLOGIE">Radiologie</option>
+                <option value="BLOC OPÉRATOIRE">Bloc opératoire</option>
+                <option value="CUISINE">Cuisine</option>
+                <option value="ADMINISTRATION">Administration</option>
+            </select>
+            <input type="text" id="marque" placeholder="Marque / modèle">
+            <input type="text" id="sn" placeholder="N° série">
+            <input type="date" id="dateAcquisition" title="Date d'acquisition">
+            <input type="date" id="dateMiseEnService" title="Date de mise en service">
+            <input type="date" id="datePrev" title="Prochaine maintenance">
+            <select id="garantie">
+                <option value="OUI">Garantie OUI</option>
+                <option value="NON">Garantie NON</option>
+            </select>
+            <select id="typeMaintenance">
+                <option value="Interne">Maintenance Interne</option>
+                <option value="Externe">Maintenance Externe</option>
+            </select>
+            <input type="text" id="societePrestation" placeholder="Société prestation">
+            <button class="btn-add" id="btnSubmit" onclick="ajouterOuModifier()">➕ ENREGISTRER</button>
+            <button class="btn-cancel" id="btnAnnuler" onclick="annulerModification()" style="display: none;">✖ ANNULER</button>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>MATRICULE</th>
+                        <th>DÉSIGNATION</th>
+                        <th>SERVICE</th>
+                        <th>MAINT. TYPE</th>
+                        <th>SOCIÉTÉ</th>
+                        <th>ACQUISITION</th>
+                        <th>MISE EN SERVICE</th>
+                        <th>MAINT. PRÉVUE</th>
+                        <th>ALERTE</th>
+                        <th>ÉTAT</th>
+                        <th>ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PAGE JOURNAL D'INTERVENTION -->
+    <div id="pageJournal" class="page">
+        <h3 style="color:#1e5945; margin-bottom:15px;">📝 Journal des interventions techniques</h3>
+        
+        <div class="grid-form" id="journalForm" style="display: grid;">
+            <input type="text" id="techNom" placeholder="Technicien *" list="techList" value="">
+            <datalist id="techList"></datalist>
+            <select id="serviceInterv">
+                <option value="">-- Service intervention --</option>
+                <option value="MATERNITÉ">Maternité</option>
+                <option value="MÉDECINE GÉNÉRALE">Médecine générale</option>
+                <option value="LABORATOIRE">Laboratoire</option>
+                <option value="RADIOLOGIE">Radiologie</option>
+                <option value="BLOC OPÉRATOIRE">Bloc</option>
+            </select>
+            <input type="text" id="equipInterv" placeholder="Équipement concerné *">
+            <input type="text" id="marqueModele" placeholder="Marque / modèle">
+            <input type="text" id="probleme" placeholder="Problème signalé *">
+            <textarea id="actionMenee" placeholder="Actions menées *"></textarea>
+            <input type="text" id="piecesChangees" placeholder="Pièces changées">
+            <select id="etatApres">
+                <option value="Fonctionnel">Fonctionnel</option>
+                <option value="En panne">En panne</option>
+                <option value="En observation">En observation</option>
+            </select>
+            <input type="datetime-local" id="dateDebut">
+            <input type="datetime-local" id="dateFin">
+            <button class="btn-add" onclick="ajouterIntervention()" id="btnAddInterv">➕ AJOUTER INTERVENTION</button>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>TECHNICIEN</th>
+                        <th>SERVICE</th>
+                        <th>ÉQUIPEMENT</th>
+                        <th>PROBLÈME</th>
+                        <th>ACTIONS</th>
+                        <th>PIÈCES</th>
+                        <th>ÉTAT</th>
+                        <th>DÉBUT</th>
+                        <th>FIN</th>
+                        <th>ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody id="journalTableBody"></tbody>
+            </table>
+        </div>
+        
+        <button class="btn-print-pdf" onclick="exporterJournalPDF()" style="background:#2c3e50; color:white; width:100%; padding:15px; border:none; border-radius:60px; margin-top:20px;">📄 EXPORTER JOURNAL PDF</button>
+    </div>
+
+    <!-- PAGE EXPRESSION DE BESOIN -->
+    <div id="pageBesoins" class="page">
+        <h3 style="color:#1e5945; margin-bottom:15px;">📋 Expression de besoin</h3>
+        
+        <div class="grid-form" id="besoinForm" style="display: grid;">
+            <input type="text" id="numeroOrdre" placeholder="N° ordre *" readonly>
+            <input type="date" id="dateEmission" placeholder="Date d'émission *">
+            <input type="text" id="designationBesoin" placeholder="Désignation du besoin *">
+            <select id="urgenceBesoin">
+                <option value="Normale">🟢 Normale</option>
+                <option value="Urgent">🟠 Urgent</option>
+                <option value="Très urgent">🔴 Très urgent</option>
+            </select>
+            <select id="statutBesoin">
+                <option value="En cours">⏳ En cours</option>
+                <option value="Réalisé">✅ Réalisé</option>
+                <option value="En attente">⏸️ En attente</option>
+            </select>
+            <input type="color" id="couleurImportance" value="#ff6b6b" title="Couleur d'importance">
+            <button class="btn-add" onclick="ajouterBesoin()">➕ AJOUTER BESOIN</button>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>N° ORDRE</th>
+                        <th>DATE</th>
+                        <th>DÉSIGNATION</th>
+                        <th>URGENCE</th>
+                        <th>STATUT</th>
+                        <th>COULEUR</th>
+                        <th>ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody id="besoinsTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PAGE MAINTENANCE -->
+    <div id="pageMaintenance" class="page">
+        <h3 style="color:#1e5945; margin-bottom:15px;">🔧 Maintenance préventive et curative</h3>
+        
+        <div class="maintenance-stats">
+            <div class="stat-card">
+                <h4>Maintenances aujourd'hui</h4>
+                <div class="stat-number" id="statsToday">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Cette semaine</h4>
+                <div class="stat-number" id="statsWeek">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Alertes rouges</h4>
+                <div class="stat-number" id="statsUrgent">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Alertes oranges</h4>
+                <div class="stat-number" id="statsProche">0</div>
+            </div>
+        </div>
+
+        <h4 style="color:#2c3e50; margin:20px 0 10px;">📅 Calendrier des maintenances</h4>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>MATRICULE</th>
+                        <th>SERVICE</th>
+                        <th>ÉQUIPEMENT</th>
+                        <th>MARQUE</th>
+                        <th>TYPE</th>
+                        <th>SOCIÉTÉ</th>
+                        <th>DATE MAINT.</th>
+                        <th>ALERTE</th>
+                        <th>STATUT</th>
+                    </tr>
+                </thead>
+                <tbody id="maintenanceTableBody"></tbody>
+            </table>
+        </div>
+
+        <h4 style="color:#2c3e50; margin:30px 0 10px;">🏭 Équipements en maintenance externe</h4>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>MATRICULE</th>
+                        <th>SERVICE</th>
+                        <th>ÉQUIPEMENT</th>
+                        <th>SOCIÉTÉ</th>
+                        <th>DATE RETOUR</th>
+                        <th>JOURS RESTANTS</th>
+                    </tr>
+                </thead>
+                <tbody id="externeTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PAGE DEMANDE DE SERVICE -->
+    <div id="pageDemande" class="page">
+        <h3 style="color:#1e5945; margin-bottom:15px;">📨 Demande de service</h3>
+        
+        <div class="service-code-section" id="serviceCodeSection" style="display: block;">
+            <h4>🔑 Accès service</h4>
+            <p>Veuillez entrer votre code service pour accéder au formulaire</p>
+            <input type="password" id="serviceCodeInput" placeholder="Code service">
+            <button class="btn-info" onclick="verifierCodeService()">Valider</button>
+        </div>
+
+        <div id="demandeFormContainer" style="display: none;">
+            <div class="grid-form">
+                <select id="demandeService" required>
+                    <option value="">-- Sélectionner votre service --</option>
+                </select>
+                <input type="text" id="demandeNom" placeholder="Nom et prénom du demandeur *" required>
+                <select id="demandeNature" required>
+                    <option value="">-- Nature de la panne --</option>
+                    <option value="Biomédicale">🔬 Biomédicale</option>
+                    <option value="Électricité">⚡ Électricité</option>
+                    <option value="Plomberie">💧 Plomberie</option>
+                    <option value="Mécanique">⚙️ Mécanique</option>
+                    <option value="Informatique">💻 Informatique</option>
+                    <option value="Climatisation">❄️ Climatisation</option>
+                    <option value="Autre">🔧 Autre</option>
+                </select>
+                <input type="text" id="demandeEquipement" placeholder="Nom de l'équipement *" required>
+                <input type="text" id="demandeCode" placeholder="Numéro de codification">
+                <textarea id="demandePanne" placeholder="Description de la panne *" rows="3" required></textarea>
+                <input type="text" id="demandeUrgence" placeholder="Niveau d'urgence (Optionnel)">
+                <button class="btn-add" onclick="soumettreDemande()">📤 SOUMETTRE LA DEMANDE</button>
+            </div>
+        </div>
+
+        <div id="demandesRecentes" style="margin-top:30px;">
+            <h4>📋 Mes demandes récentes</h4>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>N° DEMANDE</th>
+                            <th>DATE</th>
+                            <th>SERVICE</th>
+                            <th>DEMANDEUR</th>
+                            <th>NATURE</th>
+                            <th>ÉQUIPEMENT</th>
+                            <th>PANNE</th>
+                            <th>STATUT</th>
+                            <th>ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="demandesTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE MIS AU REBUT -->
+    <div id="pageRebut" class="page">
+        <h3 style="color:#1e5945; margin-bottom:15px;">🗑️ Équipements mis au rebut / déclassés</h3>
+        
+        <div class="maintenance-stats">
+            <div class="stat-card">
+                <h4>Total rebuts</h4>
+                <div class="stat-number" id="statsTotalRebut">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Cette année</h4>
+                <div class="stat-number" id="statsRebutAnnee">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Recyclage</h4>
+                <div class="stat-number" id="statsRecyclage">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>Destruction</h4>
+                <div class="stat-number" id="statsDestruction">0</div>
+            </div>
+        </div>
+        
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>MATRICULE</th>
+                        <th>DÉSIGNATION</th>
+                        <th>SERVICE</th>
+                        <th>MARQUE</th>
+                        <th>N° SÉRIE</th>
+                        <th>DATE ACQUISITION</th>
+                        <th>DATE MISE AU REBUT</th>
+                        <th>MOTIF</th>
+                        <th>RESPONSABLE</th>
+                        <th>DEVENIR</th>
+                        <th>ACTIONS</th>
+                    </tr>
+                </thead>
+                <tbody id="rebutTableBody"></tbody>
+            </table>
+        </div>
+        
+        <button class="btn-print-pdf" onclick="exporterRebutPDF()" style="background:#7f8c8d; color:white; width:100%; padding:15px; border:none; border-radius:60px; margin-top:20px;">📄 EXPORTER REGISTRE DES REBUTS PDF</button>
+    </div>
+
+    <!-- PAGE PLANNING MAINTENANCE AVEC STATISTIQUES -->
+    <div id="pagePlanning" class="page">
+        <h3 style="color:#1e5945; margin-bottom:15px;">📊 Tableau de bord du plan de maintenance</h3>
+        
+        <div class="maintenance-stats">
+            <div class="stat-card">
+                <h4>📋 Total activités planifiées</h4>
+                <div class="stat-number" id="statsTotalPlan">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>✅ Activités réalisées</h4>
+                <div class="stat-number" id="statsRealisees">0</div>
+            </div>
+            <div class="stat-card">
+                <h4>📊 Taux de réalisation</h4>
+                <div class="stat-number" id="statsTauxRealisation">0%</div>
+                <div class="stat-percent" id="statsBarreProgression"></div>
+            </div>
+            <div class="stat-card">
+                <h4>⏳ En retard</h4>
+                <div class="stat-number" id="statsEnRetard">0</div>
+            </div>
+        </div>
+        
+        <h4 style="color:#2c3e50; margin:20px 0 10px;">📅 Détail du plan de maintenance</h4>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>MATRICULE</th>
+                        <th>ÉQUIPEMENT</th>
+                        <th>SERVICE</th>
+                        <th>DATE PRÉVUE</th>
+                        <th>STATUT</th>
+                        <th>DATE RÉALISATION</th>
+                        <th>TECHNICIEN</th>
+                        <th>ÉCART (JOURS)</th>
+                    </tr>
+                </thead>
+                <tbody id="planningTableBody"></tbody>
+            </table>
+        </div>
+        
+        <div class="admin-section">
+            <h3>📈 Analyse du plan de maintenance</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div>
+                    <h4>Répartition par service</h4>
+                    <div id="statsParService"></div>
+                </div>
+                <div>
+                    <h4>Répartition par type</h4>
+                    <div id="statsParType"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section ADMIN : gestion complète -->
+    <div id="adminFullSection" style="display: none;">
+        <!-- Information sur le type d'admin -->
+        <div class="admin-section" id="adminTypeInfo">
+            <h3>👑 Statut administrateur</h3>
+            <p id="adminStatusText">Vous êtes connecté en tant qu'Administrateur Principal</p>
+            <p id="adminPrivilegesText">Vous avez tous les droits, y compris l'ajout d'autres administrateurs.</p>
+        </div>
+
+        <!-- Changement de mot de passe pour tous les utilisateurs -->
+        <div class="password-change" id="passwordChangeSection">
+            <h3>🔐 Changer mon mot de passe</h3>
+            <input type="password" id="currentPassword" placeholder="Mot de passe actuel">
+            <input type="password" id="newPassword" placeholder="Nouveau mot de passe">
+            <input type="password" id="confirmPassword" placeholder="Confirmer le mot de passe">
+            <button class="btn-warning" onclick="changerMonMotDePasse()">🔄 Changer mon mot de passe</button>
+        </div>
+
+        <!-- Configuration Email pour sauvegarde -->
+        <div class="admin-section">
+            <h3>📧 Configuration Email de sauvegarde</h3>
+            <div class="email-config">
+                <p>Les sauvegardes seront envoyées automatiquement à cette adresse</p>
+                <input type="email" id="backupEmail" placeholder="votre.email@exemple.com" value="">
+                <input type="text" id="backupFrequency" placeholder="Fréquence (heures)" value="24">
+                <button class="btn-info" onclick="configurerEmailSauvegarde()">💾 Configurer</button>
+                <button class="btn-success" onclick="envoyerSauvegardeEmail()" style="margin-top:10px;">📤 Envoyer maintenant</button>
+            </div>
+        </div>
+
+        <!-- Gestion des administrateurs (visible seulement pour l'admin principal) -->
+        <div id="adminManagementSection" class="admin-section" style="display: none;">
+            <h3>👥 Gestion des administrateurs</h3>
+            <div class="visitor-input-group">
+                <input type="text" id="newAdminName2" placeholder="Nom de l'administrateur">
+                <input type="password" id="newAdminPass2" placeholder="Mot de passe">
+                <button class="btn-add" onclick="creerAdminFromPanel()">➕ Ajouter admin</button>
+            </div>
+            <div id="adminsList" class="visitor-list">
+                <h4>Administrateurs :</h4>
+                <div id="adminsContainer"></div>
+            </div>
+            <p class="info-mode" style="margin-top:10px;">⚠️ Seul l'administrateur principal peut ajouter ou supprimer des administrateurs.</p>
+        </div>
+
+        <!-- Gestion des visiteurs -->
+        <div class="admin-section">
+            <h3>👥 Gestion des visiteurs</h3>
+            <div class="visitor-input-group">
+                <input type="text" id="newVisitorCode" placeholder="Nouveau code visiteur">
+                <button class="btn-add" onclick="ajouterVisiteur()">➕ Ajouter</button>
+            </div>
+            <div id="visitorsList" class="visitor-list">
+                <h4>Codes visiteurs :</h4>
+                <div id="visitorsContainer"></div>
+            </div>
+        </div>
+
+        <!-- Gestion des techniciens -->
+        <div class="admin-section">
+            <h3>👨‍🔧 Gestion des techniciens</h3>
+            <div class="visitor-input-group">
+                <input type="text" id="newTechCode" placeholder="Code technicien">
+                <input type="text" id="newTechName" placeholder="Nom du technicien">
+                <button class="btn-add" onclick="ajouterTechnicien()">➕ Ajouter</button>
+            </div>
+            <div id="techsList" class="visitor-list">
+                <h4>Techniciens :</h4>
+                <div id="techsContainer"></div>
+            </div>
+        </div>
+
+        <!-- Gestion des services -->
+        <div class="admin-section">
+            <h3>🏥 Gestion des services</h3>
+            <div class="visitor-input-group">
+                <input type="text" id="newServiceCode" placeholder="Code service">
+                <input type="text" id="newServiceName" placeholder="Nom du service">
+                <button class="btn-add" onclick="ajouterService()">➕ Ajouter</button>
+            </div>
+            <div id="servicesList" class="visitor-list">
+                <h4>Services :</h4>
+                <div id="servicesContainer"></div>
+            </div>
+        </div>
+
+        <!-- Journal des connexions -->
+        <div class="admin-section">
+            <h3>📊 Journal des connexions</h3>
+            <div class="table-wrapper">
+                <table class="logs-table">
+                    <thead>
+                        <tr>
+                            <th>Date/Heure</th>
+                            <th>Utilisateur</th>
+                            <th>Type</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsTableBody"></tbody>
+                </table>
+            </div>
+            <button class="btn-danger" onclick="effacerLogs()" style="margin-top:10px;">🗑️ Effacer les logs</button>
+        </div>
+
+        <!-- Personnalisation -->
+        <div class="admin-section">
+            <h3>🎨 Personnalisation</h3>
+            
+            <div class="background-settings">
+                <h4>Fond d'écran de connexion</h4>
+                <div class="color-picker-group">
+                    <label>Couleur 1:</label>
+                    <input type="color" id="bgColor1" value="#1e2b37" onchange="changerFondConnexion()">
+                    <label>Couleur 2:</label>
+                    <input type="color" id="bgColor2" value="#2c3e50" onchange="changerFondConnexion()">
+                </div>
+                <div class="color-picker-group">
+                    <label>Image de fond:</label>
+                    <input type="file" id="bgImageUpload" accept="image/*" onchange="changerFondImage(event)">
+                </div>
+                <button class="btn-info" onclick="reinitialiserFond()" style="margin-top:10px;">↺ Réinitialiser</button>
+            </div>
+
+            <div class="background-settings" style="margin-top:15px;">
+                <h4>Fond d'écran application</h4>
+                <div class="color-picker-group">
+                    <label>Couleur:</label>
+                    <input type="color" id="appBgColor" value="#f0f2f5" onchange="changerFondApp()">
+                </div>
+            </div>
+
+            <div class="logo-upload" style="margin-top:15px;">
+                <h4>Logo de l'application</h4>
+                <input type="file" id="adminLogoUpload" accept="image/*" onchange="changerLogoAdmin(event)">
+            </div>
+        </div>
+
+        <!-- Sauvegarde -->
+        <div class="admin-section">
+            <h3>💾 Sauvegarde des données</h3>
+            <div class="backup-buttons">
+                <button class="btn-backup" onclick="sauvegarderDonnees()"><span>⬇️</span> Sauvegarde locale</button>
+                <button class="btn-restore" onclick="restaurerDonnees()"><span>⬆️</span> Restaurer</button>
+                <button class="btn-sync" onclick="synchroniserEnLigne()"><span>🔄</span> Synchroniser en ligne</button>
+                <input type="file" id="restoreFile" accept=".json" style="display:none;" onchange="importerDonnees(event)">
+            </div>
+        </div>
+    </div>
+
+    <!-- Bouton de déconnexion pour tous -->
+    <div class="logout-section">
+        <button class="btn-logout" onclick="deconnexion()">🚪 Déconnexion</button>
+    </div>
+</div>
+
+<script>
+(function() {
+    // Données
+    let administrateurs = [];
+    let adminPrincipal = null;
+    let CODE_ADMIN = "HSJDA2026";
+    let equipements = [];
+    let equipementsRebut = [];
+    let visiteurs = [];
+    let techniciens = [];
+    let services = [];
+    let interventions = [];
+    let expressionsBesoin = [];
+    let demandes = [];
+    let logsConnexion = [];
+    
+    let editIndex = -1;
+    let currentMode = 'admin';
+    let currentTechInfo = null;
+    let currentServiceInfo = null;
+    let currentAdminInfo = null;
+    let historiquePages = [];
+    let backupEmail = "";
+    let backupFrequency = 24;
+    let lastBackupTime = null;
+    let syncInterval = null;
+    let estAdmin = false;
+    let estAdminPrincipal = false;
+    
+    let equipementEnCoursDeRebut = null;
+
+    // Initialisation EmailJS
+    emailjs.init("YOUR_USER_ID");
+
+    // Chargement initial
+    try {
+        // Administrateurs
+        const adminsStored = localStorage.getItem('hsjda_administrateurs');
+        if (adminsStored) {
+            administrateurs = JSON.parse(adminsStored);
+            if (administrateurs.length > 0) {
+                adminPrincipal = administrateurs[0];
+            }
+        } else {
+            administrateurs = [{nom: "Admin Principal", code: "HSJDA2026"}];
+            adminPrincipal = administrateurs[0];
+            localStorage.setItem('hsjda_administrateurs', JSON.stringify(administrateurs));
+        }
+        
+        if (administrateurs.length > 0) {
+            CODE_ADMIN = administrateurs[0].code;
+        }
+        
+        const logsStored = localStorage.getItem('hsjda_logs');
+        if (logsStored) {
+            logsConnexion = JSON.parse(logsStored);
+        }
+        
+        const storedEq = localStorage.getItem('hsjda_pro_data_v4');
+        if (storedEq) { 
+            equipements = JSON.parse(storedEq); 
+            if(!Array.isArray(equipements)) equipements = []; 
+        }
+        
+        const rebutStored = localStorage.getItem('hsjda_rebut_v1');
+        if (rebutStored) {
+            equipementsRebut = JSON.parse(rebutStored);
+            if(!Array.isArray(equipementsRebut)) equipementsRebut = [];
+        }
+        
+        const visitorsStored = localStorage.getItem('hsjda_visitors');
+        if (visitorsStored) { 
+            visiteurs = JSON.parse(visitorsStored); 
+            if(!Array.isArray(visiteurs)) visiteurs = []; 
+        } else { 
+            visiteurs = ['VISITEUR2026','VISITEUR2025']; 
+            localStorage.setItem('hsjda_visitors', JSON.stringify(visiteurs)); 
+        }
+        
+        const techStored = localStorage.getItem('hsjda_techniciens');
+        if (techStored) { 
+            techniciens = JSON.parse(techStored); 
+            if(!Array.isArray(techniciens)) techniciens = []; 
+        } else { 
+            techniciens = [
+                {code:"JEAN123", nom:"Jean KOFFI"},
+                {code:"MARIE456", nom:"Marie AHO"},
+                {code:"PAUL789", nom:"Paul KOUASSI"}
+            ]; 
+            localStorage.setItem('hsjda_techniciens', JSON.stringify(techniciens)); 
+        }
+        
+        const servicesStored = localStorage.getItem('hsjda_services');
+        if (servicesStored) { 
+            services = JSON.parse(servicesStored); 
+            if(!Array.isArray(services)) services = []; 
+        } else { 
+            services = [
+                {code:"SERV001", nom:"Maternité"},
+                {code:"SERV002", nom:"Laboratoire"},
+                {code:"SERV003", nom:"Radiologie"},
+                {code:"SERV004", nom:"Bloc opératoire"}
+            ]; 
+            localStorage.setItem('hsjda_services', JSON.stringify(services)); 
+        }
+        
+        const intervStored = localStorage.getItem('hsjda_journal_v1');
+        if (intervStored) { 
+            interventions = JSON.parse(intervStored); 
+            if(!Array.isArray(interventions)) interventions = []; 
+        }
+        
+        const besoinsStored = localStorage.getItem('hsjda_besoins_v1');
+        if (besoinsStored) { 
+            expressionsBesoin = JSON.parse(besoinsStored); 
+            if(!Array.isArray(expressionsBesoin)) expressionsBesoin = []; 
+        }
+        
+        const demandesStored = localStorage.getItem('hsjda_demandes_v1');
+        if (demandesStored) { 
+            demandes = JSON.parse(demandesStored); 
+            if(!Array.isArray(demandes)) demandes = []; 
+        }
+
+        const emailConfig = localStorage.getItem('hsjda_email_config');
+        if (emailConfig) {
+            const config = JSON.parse(emailConfig);
+            backupEmail = config.email;
+            backupFrequency = config.frequency;
+            lastBackupTime = config.lastBackup;
+            document.getElementById('backupEmail').value = backupEmail;
+            document.getElementById('backupFrequency').value = backupFrequency;
+        }
+
+        const savedLogo = localStorage.getItem('hsjda_logo');
+        if (savedLogo) {
+            document.getElementById('loginLogo').innerHTML = `<img src="${savedLogo}" style="width:100px; height:100px; border-radius:50%; object-fit:cover;">`;
+            document.getElementById('appLogo').innerHTML = `<img src="${savedLogo}" style="width:60px; height:60px; border-radius:18px; object-fit:cover;">`;
+        }
+        
+        const bgColor1 = localStorage.getItem('hsjda_bg_color1');
+        const bgColor2 = localStorage.getItem('hsjda_bg_color2');
+        const bgImage = localStorage.getItem('hsjda_bg_image');
+        
+        if (bgImage) {
+            document.getElementById('loginOverlay').style.background = `url('${bgImage}') center/cover no-repeat`;
+        } else if (bgColor1 && bgColor2) {
+            document.getElementById('loginOverlay').style.background = `linear-gradient(145deg, ${bgColor1}, ${bgColor2})`;
+        }
+        
+        const appBg = localStorage.getItem('hsjda_app_bg');
+        if (appBg) {
+            document.body.style.backgroundColor = appBg;
+        }
+        
+        demarrerSynchronisationAutomatique();
+        
+    } catch(e) { 
+        console.warn("erreur chargement", e); 
+    }
+
+    function showNotification(message, type = 'success') {
+        const notif = document.getElementById('notification');
+        notif.textContent = message;
+        notif.style.backgroundColor = type === 'success' ? '#27ae60' : '#e74c3c';
+        notif.style.display = 'block';
+        setTimeout(() => { notif.style.display = 'none'; }, 3000);
+    }
+
+    window.deconnexion = function() {
+        if (confirm("Êtes-vous sûr de vouloir vous déconnecter ?")) {
+            ajouterLog(getCurrentUserName(), currentMode, 'Déconnexion');
+            document.getElementById('loginOverlay').style.display = 'flex';
+            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('passInput').value = '';
+            currentMode = 'admin';
+            estAdmin = false;
+            estAdminPrincipal = false;
+            currentAdminInfo = null;
+            currentTechInfo = null;
+            currentServiceInfo = null;
+        }
+    };
+
+    function getCurrentUserName() {
+        switch(currentMode) {
+            case 'admin': return currentAdminInfo?.nom || 'Admin';
+            case 'technicien': return currentTechInfo?.nom || 'Technicien';
+            case 'service': return currentServiceInfo?.nom || 'Service';
+            case 'visitor': return 'Visiteur';
+            default: return 'Utilisateur';
+        }
+    }
+
+    function ajouterLog(utilisateur, type, action) {
+        const log = {
+            date: new Date().toLocaleString(),
+            utilisateur: utilisateur,
+            type: type,
+            action: action
+        };
+        logsConnexion.unshift(log);
+        if (logsConnexion.length > 100) logsConnexion.pop();
+        localStorage.setItem('hsjda_logs', JSON.stringify(logsConnexion));
+        afficherLogs();
+    }
+
+    function afficherLogs() {
+        const tbody = document.getElementById('logsTableBody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        logsConnexion.slice(0, 50).forEach(log => {
+            const ligne = document.createElement('tr');
+            ligne.innerHTML = `
+                <td>${log.date}</td>
+                <td>${log.utilisateur}</td>
+                <td>${log.type}</td>
+                <td>${log.action}</td>
+            `;
+            tbody.appendChild(ligne);
+        });
+    }
+
+    window.effacerLogs = function() {
+        if (currentMode !== 'admin') return;
+        if (confirm("Effacer tous les logs de connexion ?")) {
+            logsConnexion = [];
+            localStorage.setItem('hsjda_logs', JSON.stringify(logsConnexion));
+            afficherLogs();
+            showNotification('Logs effacés');
+        }
+    };
+
+    window.retourModeAdmin = function() {
+        if (estAdmin) {
+            currentMode = 'admin';
+            ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', 'Retour au mode Admin');
+            connecter();
+        } else {
+            showNotification("Vous n'avez pas les droits pour revenir en mode admin", 'error');
+        }
+    };
+
+    window.changerMode = function(mode) {
+        if (!estAdmin) return;
+        
+        switch(mode) {
+            case 'admin':
+                currentMode = 'admin';
+                ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', 'Retour au mode Admin');
+                break;
+            case 'technicien':
+                currentMode = 'technicien';
+                currentTechInfo = techniciens[0] || {nom: "Technicien", code: "TECH001"};
+                ajouterLog(currentAdminInfo?.nom || 'Admin', 'Changement mode', 'Passage en mode Technicien');
+                break;
+            case 'visitor':
+                currentMode = 'visitor';
+                ajouterLog(currentAdminInfo?.nom || 'Admin', 'Changement mode', 'Passage en mode Visiteur');
+                break;
+            case 'service':
+                currentMode = 'service';
+                currentServiceInfo = services[0] || {nom: "Service", code: "SERV001"};
+                ajouterLog(currentAdminInfo?.nom || 'Admin', 'Changement mode', 'Passage en mode Service');
+                break;
+        }
+        
+        connecter();
+    };
+
+    window.changerMonMotDePasse = function() {
+        const currentPass = document.getElementById('currentPassword').value;
+        const newPass = document.getElementById('newPassword').value;
+        const confirmPass = document.getElementById('confirmPassword').value;
+        
+        if (!currentPass || !newPass || !confirmPass) {
+            alert("Veuillez remplir tous les champs");
+            return;
+        }
+        
+        if (newPass !== confirmPass) {
+            alert("Les nouveaux mots de passe ne correspondent pas");
+            return;
+        }
+        
+        if (newPass.length < 4) {
+            alert("Le mot de passe doit contenir au moins 4 caractères");
+            return;
+        }
+        
+        let userFound = false;
+        
+        switch(currentMode) {
+            case 'admin':
+                const admin = administrateurs.find(a => a.code === currentPass);
+                if (admin) {
+                    admin.code = newPass;
+                    localStorage.setItem('hsjda_administrateurs', JSON.stringify(administrateurs));
+                    userFound = true;
+                    ajouterLog(admin.nom, 'Admin', 'Changement de mot de passe');
+                }
+                break;
+                
+            case 'technicien':
+                if (currentTechInfo && currentTechInfo.code === currentPass) {
+                    currentTechInfo.code = newPass;
+                    const techIndex = techniciens.findIndex(t => t.nom === currentTechInfo.nom);
+                    if (techIndex !== -1) {
+                        techniciens[techIndex].code = newPass;
+                        localStorage.setItem('hsjda_techniciens', JSON.stringify(techniciens));
+                        userFound = true;
+                        ajouterLog(currentTechInfo.nom, 'Technicien', 'Changement de mot de passe');
+                    }
+                }
+                break;
+                
+            case 'service':
+                if (currentServiceInfo && currentServiceInfo.code === currentPass) {
+                    currentServiceInfo.code = newPass;
+                    const servIndex = services.findIndex(s => s.nom === currentServiceInfo.nom);
+                    if (servIndex !== -1) {
+                        services[servIndex].code = newPass;
+                        localStorage.setItem('hsjda_services', JSON.stringify(services));
+                        userFound = true;
+                        ajouterLog(currentServiceInfo.nom, 'Service', 'Changement de mot de passe');
+                    }
+                }
+                break;
+                
+            case 'visitor':
+                if (visiteurs.includes(currentPass)) {
+                    const index = visiteurs.indexOf(currentPass);
+                    visiteurs[index] = newPass;
+                    localStorage.setItem('hsjda_visitors', JSON.stringify(visiteurs));
+                    userFound = true;
+                    ajouterLog('Visiteur', 'Visiteur', 'Changement de mot de passe');
+                }
+                break;
+        }
+        
+        if (userFound) {
+            showNotification('Mot de passe modifié avec succès');
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
+        } else {
+            alert("Mot de passe actuel incorrect");
+        }
+    };
+
+    window.retourArriere = function() {
+        if (historiquePages.length > 0) {
+            const pagePrecedente = historiquePages.pop();
+            changerRubrique(pagePrecedente);
+        } else {
+            changerRubrique('inventaire');
+        }
+    };
+
+    window.configurerEmailSauvegarde = function() {
+        const email = document.getElementById('backupEmail').value.trim();
+        const frequency = document.getElementById('backupFrequency').value.trim();
+        
+        if (!email || !email.includes('@')) {
+            alert("Veuillez entrer une adresse email valide");
+            return;
+        }
+        
+        backupEmail = email;
+        backupFrequency = parseInt(frequency) || 24;
+        
+        const config = {
+            email: backupEmail,
+            frequency: backupFrequency,
+            lastBackup: lastBackupTime
+        };
+        
+        localStorage.setItem('hsjda_email_config', JSON.stringify(config));
+        showNotification('Configuration email sauvegardée');
+        
+        demarrerSynchronisationAutomatique();
+    };
+
+    window.envoyerSauvegardeEmail = function() {
+        if (!backupEmail) {
+            alert("Veuillez d'abord configurer votre email");
+            return;
+        }
+        
+        const data = { 
+            administrateurs,
+            equipements, 
+            equipementsRebut,
+            visiteurs, 
+            techniciens, 
+            services,
+            interventions, 
+            expressionsBesoin,
+            demandes,
+            logsConnexion,
+            date: new Date().toISOString(), 
+            version: '7.0' 
+        };
+        
+        const dataStr = JSON.stringify(data, null, 2);
+        const fileName = `hsjda_backup_${new Date().toISOString().split('T')[0]}.json`;
+        
+        const templateParams = {
+            to_email: backupEmail,
+            subject: `Sauvegarde HSJDA - ${new Date().toLocaleDateString()}`,
+            message: `Sauvegarde automatique des données HSJDA`,
+            attachment: dataStr,
+            filename: fileName
+        };
+        
+        emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', templateParams)
+            .then(function(response) {
+                lastBackupTime = new Date().toISOString();
+                const config = {
+                    email: backupEmail,
+                    frequency: backupFrequency,
+                    lastBackup: lastBackupTime
+                };
+                localStorage.setItem('hsjda_email_config', JSON.stringify(config));
+                updateSyncStatus();
+                showNotification('Sauvegarde envoyée par email');
+            }, function(error) {
+                console.error('Erreur email:', error);
+                showNotification('Erreur lors de l\'envoi', 'error');
+            });
+    };
+
+    function demarrerSynchronisationAutomatique() {
+        if (syncInterval) {
+            clearInterval(syncInterval);
+        }
+        
+        if (backupEmail && backupFrequency > 0) {
+            syncInterval = setInterval(() => {
+                verifierEtSynchroniser();
+            }, backupFrequency * 60 * 60 * 1000);
+        }
+    }
+
+    function verifierEtSynchroniser() {
+        if (!backupEmail) return;
+        
+        const now = new Date();
+        const lastBackup = lastBackupTime ? new Date(lastBackupTime) : null;
+        
+        if (!lastBackup) {
+            envoyerSauvegardeEmail();
+            return;
+        }
+        
+        const hoursSinceLastBackup = (now - lastBackup) / (1000 * 60 * 60);
+        
+        if (hoursSinceLastBackup >= backupFrequency) {
+            envoyerSauvegardeEmail();
+        }
+    }
+
+    function updateSyncStatus() {
+        const syncMessage = document.getElementById('syncMessage');
+        const lastSyncEl = document.getElementById('lastSync');
+        
+        if (lastBackupTime) {
+            const date = new Date(lastBackupTime);
+            lastSyncEl.textContent = ` - Dernière synchro: ${date.toLocaleString()}`;
+        } else {
+            lastSyncEl.textContent = '';
+        }
+        
+        if (backupEmail) {
+            syncMessage.textContent = `Sauvegarde automatique configurée vers: ${backupEmail}`;
+        }
+    }
+
+    window.synchroniserEnLigne = function() {
+        envoyerSauvegardeEmail();
+    };
+
+    function configurerMenuParMode() {
+        const menuInv = document.getElementById('menuInventaire');
+        const menuJour = document.getElementById('menuJournal');
+        const menuBes = document.getElementById('menuBesoins');
+        const menuMain = document.getElementById('menuMaintenance');
+        const menuDem = document.getElementById('menuDemande');
+        const menuRebut = document.getElementById('menuRebut');
+        const menuPlanning = document.getElementById('menuPlanning');
+        const formContainer = document.getElementById('formContainer');
+        const journalForm = document.getElementById('journalForm');
+        const besoinForm = document.getElementById('besoinForm');
+        const adminSection = document.getElementById('adminFullSection');
+        const adminControls = document.getElementById('adminControls');
+        const serviceFilter = document.getElementById('serviceFilterSection');
+        const modeSwitchPanel = document.getElementById('modeSwitchPanel');
+        const adminReturnSection = document.getElementById('adminReturnSection');
+        const passwordSection = document.getElementById('passwordChangeSection');
+        const serviceCodeSection = document.getElementById('serviceCodeSection');
+        const demandeFormContainer = document.getElementById('demandeFormContainer');
+        
+        // Réinitialiser
+        menuInv.disabled = false;
+        menuJour.disabled = false;
+        menuBes.disabled = false;
+        menuMain.disabled = false;
+        menuDem.disabled = false;
+        menuRebut.disabled = false;
+        menuPlanning.disabled = false;
+        
+        // Configuration selon le mode
+        switch(currentMode) {
+            case 'admin':
+                formContainer.style.display = 'grid';
+                journalForm.style.display = 'grid';
+                besoinForm.style.display = 'grid';
+                adminSection.style.display = 'block';
+                adminControls.style.display = 'block';
+                modeSwitchPanel.style.display = 'flex';
+                adminReturnSection.style.display = 'none';
+                serviceFilter.style.display = 'none';
+                passwordSection.style.display = 'block';
+                menuRebut.disabled = false;
+                menuPlanning.disabled = false;
+                
+                // Pour les demandes de service en mode admin
+                serviceCodeSection.style.display = 'none';
+                demandeFormContainer.style.display = 'grid';
+                
+                document.getElementById('adminManagementSection').style.display = estAdminPrincipal ? 'block' : 'none';
+                break;
+                
+            case 'technicien':
+                menuInv.disabled = true;
+                menuBes.disabled = false; // Le technicien peut faire des expressions de besoin
+                menuDem.disabled = true;
+                menuRebut.disabled = true;
+                menuPlanning.disabled = false;
+                formContainer.style.display = 'none';
+                journalForm.style.display = 'grid'; // Le technicien peut ajouter des interventions
+                besoinForm.style.display = 'grid'; // Le technicien peut ajouter des besoins
+                adminSection.style.display = 'none';
+                adminControls.style.display = 'none';
+                modeSwitchPanel.style.display = 'none';
+                adminReturnSection.style.display = estAdmin ? 'block' : 'none';
+                serviceFilter.style.display = 'none';
+                passwordSection.style.display = 'block';
+                serviceCodeSection.style.display = 'none';
+                demandeFormContainer.style.display = 'none';
+                
+                if (currentTechInfo) {
+                    document.getElementById('techNom').value = currentTechInfo.nom;
+                }
+                break;
+                
+            case 'service':
+                menuJour.disabled = true;
+                menuBes.disabled = true;
+                menuMain.disabled = true;
+                menuRebut.disabled = true;
+                menuPlanning.disabled = true;
+                formContainer.style.display = 'none';
+                journalForm.style.display = 'none';
+                besoinForm.style.display = 'none';
+                adminSection.style.display = 'none';
+                adminControls.style.display = 'none';
+                modeSwitchPanel.style.display = 'none';
+                adminReturnSection.style.display = estAdmin ? 'block' : 'none';
+                serviceFilter.style.display = 'block';
+                passwordSection.style.display = 'block';
+                
+                // Pour les demandes de service
+                if (currentServiceInfo) {
+                    serviceCodeSection.style.display = 'none';
+                    demandeFormContainer.style.display = 'grid';
+                    document.getElementById('demandeService').value = currentServiceInfo.nom;
+                } else {
+                    serviceCodeSection.style.display = 'block';
+                    demandeFormContainer.style.display = 'none';
+                }
+                
+                remplirFiltreServices();
+                break;
+                
+            case 'visitor':
+                menuJour.disabled = true;
+                menuBes.disabled = true;
+                menuMain.disabled = true;
+                menuDem.disabled = true;
+                menuRebut.disabled = true;
+                menuPlanning.disabled = true;
+                formContainer.style.display = 'none';
+                journalForm.style.display = 'none';
+                besoinForm.style.display = 'none';
+                adminSection.style.display = 'none';
+                adminControls.style.display = 'none';
+                modeSwitchPanel.style.display = 'none';
+                adminReturnSection.style.display = estAdmin ? 'block' : 'none';
+                serviceFilter.style.display = 'none';
+                passwordSection.style.display = 'block';
+                serviceCodeSection.style.display = 'none';
+                demandeFormContainer.style.display = 'none';
+                break;
+        }
+    }
+
+    function remplirFiltreServices() {
+        const select = document.getElementById('serviceFilter');
+        select.innerHTML = '<option value="">-- Tous les services --</option>';
+        services.forEach(s => {
+            select.innerHTML += `<option value="${s.nom}">${s.nom}</option>`;
+        });
+    }
+
+    window.filtrerParService = function() {
+        afficher();
+    };
+
+    window.creerAdminFromPanel = function() {
+        if (currentMode !== 'admin' || !estAdminPrincipal) {
+            alert("Seul l'administrateur principal peut ajouter des administrateurs");
+            return;
+        }
+        
+        const nom = document.getElementById('newAdminName2').value.trim();
+        const code = document.getElementById('newAdminPass2').value.trim();
+        
+        if (!nom || !code) {
+            alert("Nom et mot de passe requis");
+            return;
+        }
+        
+        if (code.length < 4) {
+            alert("Le mot de passe doit contenir au moins 4 caractères");
+            return;
+        }
+        
+        if (administrateurs.some(a => a.code === code)) {
+            alert("Ce code existe déjà");
+            return;
+        }
+        
+        administrateurs.push({nom, code});
+        localStorage.setItem('hsjda_administrateurs', JSON.stringify(administrateurs));
+        
+        document.getElementById('newAdminName2').value = '';
+        document.getElementById('newAdminPass2').value = '';
+        
+        afficherListeAdmins();
+        ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Ajout de l'administrateur ${nom}`);
+        showNotification('Administrateur ajouté');
+    };
+
+    window.supprimerAdmin = function(code) {
+        if (currentMode !== 'admin' || !estAdminPrincipal) {
+            alert("Seul l'administrateur principal peut supprimer des administrateurs");
+            return;
+        }
+        
+        if (code === adminPrincipal?.code) {
+            alert("Impossible de supprimer l'administrateur principal");
+            return;
+        }
+        
+        if (confirm("Supprimer cet administrateur ?")) {
+            const admin = administrateurs.find(a => a.code === code);
+            administrateurs = administrateurs.filter(a => a.code !== code);
+            localStorage.setItem('hsjda_administrateurs', JSON.stringify(administrateurs));
+            afficherListeAdmins();
+            ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Suppression de l'administrateur ${admin?.nom}`);
+            showNotification('Administrateur supprimé');
+        }
+    };
+
+    function afficherListeAdmins() {
+        const container = document.getElementById('adminsContainer');
+        if (!container) return;
+        
+        container.innerHTML = administrateurs.map(a => {
+            const estPrincipal = a.code === adminPrincipal?.code;
+            return `
+                <div class="visitor-item">
+                    <span>${a.nom} (${a.code}) ${estPrincipal ? '<span class="admin-principal-badge">Principal</span>' : ''}</span>
+                    ${!estPrincipal && estAdminPrincipal ? '<button class="btn-danger" onclick="supprimerAdmin(\'' + a.code + '\')">Supprimer</button>' : ''}
+                </div>
+            `;
+        }).join('');
+    }
+
+    window.ouvrirModalRebut = function(index) {
+        if (currentMode !== 'admin') return;
+        
+        const equip = equipements[index];
+        if (!equip) return;
+        
+        equipementEnCoursDeRebut = {...equip, originalIndex: index};
+        
+        document.getElementById('rebutEquipInfo').textContent = 
+            `Équipement: ${equip.nom} (${equip.matricule}) - Service: ${equip.service}`;
+        
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('rebutDate').value = today;
+        document.getElementById('rebutMotif').value = '';
+        document.getElementById('rebutDescription').value = '';
+        document.getElementById('rebutResponsable').value = currentAdminInfo?.nom || '';
+        document.getElementById('rebutDerniereIntervention').value = '';
+        document.getElementById('rebutValeurResiduelle').value = '';
+        document.getElementById('rebutDevenir').value = 'Recyclage';
+        document.getElementById('rebutDocuments').value = '';
+        document.getElementById('rebutObservations').value = '';
+        
+        document.getElementById('rebutModal').style.display = 'flex';
+    };
+
+    window.fermerModalRebut = function() {
+        document.getElementById('rebutModal').style.display = 'none';
+        equipementEnCoursDeRebut = null;
+    };
+
+    window.confirmerMiseAuRebut = function() {
+        if (!equipementEnCoursDeRebut) return;
+        
+        const dateRebut = document.getElementById('rebutDate').value;
+        const motif = document.getElementById('rebutMotif').value;
+        const description = document.getElementById('rebutDescription').value.trim();
+        const responsable = document.getElementById('rebutResponsable').value.trim();
+        const derniereIntervention = document.getElementById('rebutDerniereIntervention').value.trim();
+        const valeurResiduelle = document.getElementById('rebutValeurResiduelle').value.trim();
+        const devenir = document.getElementById('rebutDevenir').value;
+        const documents = document.getElementById('rebutDocuments').value.trim();
+        const observations = document.getElementById('rebutObservations').value.trim();
+        
+        if (!dateRebut || !motif || !description || !responsable) {
+            alert("Veuillez remplir tous les champs obligatoires (*)");
+            return;
+        }
+        
+        const equip = equipementEnCoursDeRebut;
+        
+        const rebutRecord = {
+            id: Date.now(),
+            ...equip,
+            dateRebut: dateRebut,
+            motifRebut: motif,
+            descriptionRebut: description,
+            responsableRebut: responsable,
+            derniereInterventionRebut: derniereIntervention,
+            valeurResiduelleRebut: valeurResiduelle,
+            devenirRebut: devenir,
+            documentsRebut: documents,
+            observationsRebut: observations,
+            dateCreation: new Date().toISOString()
+        };
+        
+        equipementsRebut.unshift(rebutRecord);
+        equipements.splice(equip.originalIndex, 1);
+        
+        localStorage.setItem('hsjda_pro_data_v4', JSON.stringify(equipements));
+        localStorage.setItem('hsjda_rebut_v1', JSON.stringify(equipementsRebut));
+        
+        ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Mise au rebut: ${equip.nom} (${equip.matricule})`);
+        
+        fermerModalRebut();
+        afficher();
+        afficherRebut();
+        showNotification('Équipement mis au rebut avec succès');
+    };
+
+    window.restaurerEquipement = function(index) {
+        if (currentMode !== 'admin') return;
+        
+        const rebut = equipementsRebut[index];
+        if (!rebut) return;
+        
+        if (confirm(`Voulez-vous vraiment restaurer l'équipement "${rebut.nom}" dans l'inventaire actif ?`)) {
+            const { id, dateRebut, motifRebut, descriptionRebut, responsableRebut, derniereInterventionRebut, valeurResiduelleRebut, devenirRebut, documentsRebut, observationsRebut, dateCreation, originalIndex, ...equipRestored } = rebut;
+            
+            equipements.push(equipRestored);
+            equipementsRebut.splice(index, 1);
+            
+            localStorage.setItem('hsjda_pro_data_v4', JSON.stringify(equipements));
+            localStorage.setItem('hsjda_rebut_v1', JSON.stringify(equipementsRebut));
+            
+            ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Restauration rebut: ${rebut.nom} (${rebut.matricule})`);
+            
+            afficher();
+            afficherRebut();
+            showNotification('Équipement restauré avec succès');
+        }
+    };
+
+    window.supprimerRebutPermanent = function(index) {
+        if (currentMode !== 'admin') return;
+        
+        const rebut = equipementsRebut[index];
+        if (!rebut) return;
+        
+        if (confirm(`⚠️ Suppression PERMANENTE de l'équipement "${rebut.nom}" (${rebut.matricule}). Cette action est irréversible. Confirmer ?`)) {
+            equipementsRebut.splice(index, 1);
+            localStorage.setItem('hsjda_rebut_v1', JSON.stringify(equipementsRebut));
+            
+            ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Suppression permanente rebut: ${rebut.nom} (${rebut.matricule})`);
+            
+            afficherRebut();
+            showNotification('Équipement supprimé définitivement');
+        }
+    };
+
+    function afficherRebut() {
+        const tbody = document.getElementById('rebutTableBody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        if (equipementsRebut.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:35px;">Aucun équipement mis au rebut.</td></tr>';
+            return;
+        }
+        
+        equipementsRebut.forEach((rebut, idx) => {
+            const peutModifier = currentMode === 'admin';
+            const ligne = document.createElement('tr');
+            ligne.innerHTML = `
+                <td><span class="matricule">${rebut.matricule || 'HSJDA/??'}</span></td>
+                <td><strong>${rebut.nom}</strong><br><small>${rebut.marque || ''}</small></td>
+                <td>${rebut.service}</td>
+                <td>${rebut.marque || '-'}</td>
+                <td>${rebut.sn || '-'}</td>
+                <td class="date-small">${rebut.dateAcquisition || '—'}</td>
+                <td class="date-small">${rebut.dateRebut}</td>
+                <td>${rebut.motifRebut}</td>
+                <td>${rebut.responsableRebut}</td>
+                <td>${rebut.devenirRebut}</td>
+                <td>
+                    <div class="action-buttons">
+                        ${peutModifier ? `
+                            <button class="btn-success" onclick="restaurerEquipement(${idx})" title="Restaurer dans l'inventaire">↩️ Restaurer</button>
+                            <button class="btn-danger" onclick="supprimerRebutPermanent(${idx})" title="Supprimer définitivement">🗑️ Supprimer</button>
+                            <button class="btn-info" onclick="voirDetailsRebut(${idx})" title="Voir détails">👁️ Détails</button>
+                        ` : ''}
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(ligne);
+        });
+        
+        const totalRebut = equipementsRebut.length;
+        const anneeCourante = new Date().getFullYear();
+        const rebutAnnee = equipementsRebut.filter(r => new Date(r.dateRebut).getFullYear() === anneeCourante).length;
+        const recyclage = equipementsRebut.filter(r => r.devenirRebut === 'Recyclage').length;
+        const destruction = equipementsRebut.filter(r => r.devenirRebut === 'Destruction' || r.devenirRebut === 'Destruction contrôlée').length;
+        
+        document.getElementById('statsTotalRebut').textContent = totalRebut;
+        document.getElementById('statsRebutAnnee').textContent = rebutAnnee;
+        document.getElementById('statsRecyclage').textContent = recyclage;
+        document.getElementById('statsDestruction').textContent = destruction;
+    }
+
+    window.voirDetailsRebut = function(index) {
+        const rebut = equipementsRebut[index];
+        if (!rebut) return;
+        
+        const details = `
+            Équipement: ${rebut.nom} (${rebut.matricule})
+            Service: ${rebut.service}
+            Marque: ${rebut.marque || '-'}
+            N° Série: ${rebut.sn || '-'}
+            
+            📅 Date acquisition: ${rebut.dateAcquisition || 'Non renseignée'}
+            📅 Date mise au rebut: ${rebut.dateRebut}
+            
+            ⚠️ Motif: ${rebut.motifRebut}
+            📝 Description: ${rebut.descriptionRebut}
+            
+            🔧 Dernière intervention: ${rebut.derniereInterventionRebut || 'Non renseignée'}
+            💰 Valeur résiduelle: ${rebut.valeurResiduelleRebut || 'Non renseignée'}
+            
+            👤 Responsable: ${rebut.responsableRebut}
+            📦 Devenir: ${rebut.devenirRebut}
+            📄 Documents: ${rebut.documentsRebut || 'Aucun'}
+            
+            💬 Observations: ${rebut.observationsRebut || 'Aucune'}
+        `;
+        
+        alert(details);
+    };
+
+    window.exporterRebutPDF = function() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+        
+        doc.setFillColor(127, 140, 141);
+        doc.rect(0, 0, 297, 20, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(14);
+        doc.text("REGISTRE DES ÉQUIPEMENTS MIS AU REBUT - HSJDA", 15, 13);
+        
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(8);
+        let y = 30;
+        
+        doc.setFillColor(220, 240, 235);
+        doc.rect(10, y - 5, 277, 8, 'F');
+        doc.setFont(undefined, 'bold');
+        doc.text("Matricule", 12, y);
+        doc.text("Équipement", 42, y);
+        doc.text("Service", 72, y);
+        doc.text("Date rebut", 102, y);
+        doc.text("Motif", 132, y);
+        doc.text("Responsable", 172, y);
+        doc.text("Devenir", 212, y);
+        doc.text("Observations", 242, y);
+        doc.setFont(undefined, 'normal');
+        y += 5;
+        
+        equipementsRebut.forEach(rebut => {
+            if (y > 180) {
+                doc.addPage();
+                y = 20;
+                doc.setFillColor(220, 240, 235);
+                doc.rect(10, y - 5, 277, 8, 'F');
+                doc.setFont(undefined, 'bold');
+                doc.text("Matricule", 12, y);
+                doc.text("Équipement", 42, y);
+                doc.text("Service", 72, y);
+                doc.text("Date rebut", 102, y);
+                doc.text("Motif", 132, y);
+                doc.text("Responsable", 172, y);
+                doc.text("Devenir", 212, y);
+                doc.text("Observations", 242, y);
+                doc.setFont(undefined, 'normal');
+                y += 5;
+            }
+            
+            doc.text(rebut.matricule?.substring(0, 10) || '', 12, y);
+            doc.text(rebut.nom?.substring(0, 10) || '', 42, y);
+            doc.text(rebut.service?.substring(0, 10) || '', 72, y);
+            doc.text(rebut.dateRebut || '', 102, y);
+            doc.text(rebut.motifRebut?.substring(0, 12) || '', 132, y);
+            doc.text(rebut.responsableRebut?.substring(0, 10) || '', 172, y);
+            doc.text(rebut.devenirRebut?.substring(0, 10) || '', 212, y);
+            doc.text((rebut.observationsRebut || '').substring(0, 12), 242, y);
+            
+            y += 5;
+        });
+        
+        doc.save("Registre_Rebut_HSJDA.pdf");
+    };
+
+    function calculerStatistiquesMaintenance() {
+        const totalPlanifie = equipements.filter(e => e.datePrev).length;
+        const interventionsParEquipement = {};
+        
+        interventions.forEach(interv => {
+            if (!interventionsParEquipement[interv.equipement]) {
+                interventionsParEquipement[interv.equipement] = [];
+            }
+            interventionsParEquipement[interv.equipement].push(interv);
+        });
+        
+        let realisees = 0;
+        equipements.forEach(eq => {
+            if (eq.datePrev && interventionsParEquipement[eq.nom]) {
+                const intervApresDate = interventionsParEquipement[eq.nom].filter(interv => 
+                    interv.dateDebut && new Date(interv.dateDebut) >= new Date(eq.datePrev)
+                );
+                if (intervApresDate.length > 0) {
+                    realisees++;
+                }
+            }
+        });
+        
+        const tauxRealisation = totalPlanifie > 0 ? Math.round((realisees / totalPlanifie) * 100) : 0;
+        
+        const aujourdHui = new Date();
+        const enRetard = equipements.filter(eq => {
+            if (!eq.datePrev) return false;
+            return new Date(eq.datePrev) < aujourdHui;
+        }).length;
+        
+        document.getElementById('statsTotalPlan').textContent = totalPlanifie;
+        document.getElementById('statsRealisees').textContent = realisees;
+        document.getElementById('statsTauxRealisation').textContent = tauxRealisation + '%';
+        document.getElementById('statsEnRetard').textContent = enRetard;
+        
+        const planningTbody = document.getElementById('planningTableBody');
+        if (planningTbody) {
+            planningTbody.innerHTML = '';
+            
+            equipements.sort((a, b) => (a.datePrev || '9999-12-31').localeCompare(b.datePrev || '9999-12-31'));
+            
+            equipements.forEach(eq => {
+                if (!eq.datePrev) return;
+                
+                const realisee = interventionsParEquipement[eq.nom]?.some(interv => 
+                    interv.dateDebut && new Date(interv.dateDebut) >= new Date(eq.datePrev)
+                ) || false;
+                
+                const datePrevObj = new Date(eq.datePrev);
+                const aujourdHui = new Date();
+                const diffTime = datePrevObj - aujourdHui;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                const ligne = document.createElement('tr');
+                ligne.innerHTML = `
+                    <td><span class="matricule">${eq.matricule}</span></td>
+                    <td>${eq.nom}</td>
+                    <td>${eq.service}</td>
+                    <td class="date-small">${eq.datePrev}</td>
+                    <td><span class="statut-badge ${realisee ? 'statut-realise' : diffDays < 0 ? 'urgence-haute' : 'statut-attente'}">${realisee ? 'Réalisé' : diffDays < 0 ? 'En retard' : 'Planifié'}</span></td>
+                    <td class="date-small">${realisee ? 'Voir journal' : '-'}</td>
+                    <td>${realisee ? interventionsParEquipement[eq.nom]?.find(interv => new Date(interv.dateDebut) >= new Date(eq.datePrev))?.technicien || '-' : '-'}</td>
+                    <td><span class="${diffDays < 0 ? 'alert-urgent' : diffDays <= 7 ? 'alert-proche' : 'alert-normal'}">${diffDays < 0 ? Math.abs(diffDays) + ' jours' : diffDays + ' jours'}</span></td>
+                `;
+                planningTbody.appendChild(ligne);
+            });
+        }
+    }
+
+    window.verifierCode = function(mode) {
+        const input = document.getElementById('passInput').value;
+        
+        if (mode === 'admin') {
+            const admin = administrateurs.find(a => a.code === input);
+            if (admin) { 
+                currentMode = 'admin'; 
+                currentAdminInfo = admin;
+                estAdmin = true;
+                estAdminPrincipal = (admin.code === adminPrincipal?.code);
+                ajouterLog(admin.nom, 'Admin', 'Connexion');
+                connecter(); 
+            } else { 
+                afficherErreur(); 
+            }
+        } else if (mode === 'visitor') {
+            if (visiteurs.includes(input)) { 
+                currentMode = 'visitor';
+                estAdmin = false;
+                estAdminPrincipal = false;
+                ajouterLog('Visiteur', 'Visiteur', 'Connexion');
+                connecter(); 
+            } else { 
+                afficherErreur(); 
+            }
+        }
+    };
+
+    window.promptTechnicien = function() {
+        let code = prompt("Entrez votre code technicien :");
+        if (!code) return;
+        const tech = techniciens.find(t => t.code === code);
+        if (tech) { 
+            currentMode = 'technicien'; 
+            currentTechInfo = tech;
+            estAdmin = false;
+            estAdminPrincipal = false;
+            ajouterLog(tech.nom, 'Technicien', 'Connexion');
+            connecter(); 
+        } else { 
+            alert("Code technicien invalide"); 
+        }
+    };
+
+    window.promptService = function() {
+        let code = prompt("Entrez votre code service :");
+        if (!code) return;
+        const service = services.find(s => s.code === code);
+        if (service) {
+            currentMode = 'service';
+            currentServiceInfo = service;
+            estAdmin = false;
+            estAdminPrincipal = false;
+            ajouterLog(service.nom, 'Service', 'Connexion');
+            connecter();
+        } else {
+            alert("Code service invalide");
+        }
+    };
+
+    window.verifierCodeService = function() {
+        const code = document.getElementById('serviceCodeInput').value;
+        const service = services.find(s => s.code === code);
+        if (service) {
+            currentServiceInfo = service;
+            document.getElementById('serviceCodeSection').style.display = 'none';
+            document.getElementById('demandeFormContainer').style.display = 'grid';
+            document.getElementById('demandeService').value = service.nom;
+            showNotification(`Accès autorisé pour le service ${service.nom}`);
+        } else {
+            alert("Code service invalide");
+        }
+    };
+
+    function connecter() {
+        document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        
+        const modeBadge = document.getElementById('modeBadge');
+        
+        switch(currentMode) {
+            case 'admin':
+                modeBadge.textContent = estAdminPrincipal ? `Admin Principal: ${currentAdminInfo?.nom}` : `Admin: ${currentAdminInfo?.nom}`;
+                modeBadge.className = estAdminPrincipal ? 'mode-badge admin' : 'mode-badge admin-secondary';
+                break;
+            case 'visitor':
+                modeBadge.textContent = 'Mode Visiteur (lecture seule)';
+                modeBadge.className = 'mode-badge visitor';
+                break;
+            case 'technicien':
+                modeBadge.textContent = `Technicien: ${currentTechInfo?.nom || ''}`;
+                modeBadge.className = 'mode-badge technicien';
+                break;
+            case 'service':
+                modeBadge.textContent = `Service: ${currentServiceInfo?.nom || ''}`;
+                modeBadge.className = 'mode-badge service';
+                break;
+        }
+
+        const adminStatusText = document.getElementById('adminStatusText');
+        const adminPrivilegesText = document.getElementById('adminPrivilegesText');
+        if (adminStatusText && adminPrivilegesText) {
+            if (estAdminPrincipal) {
+                adminStatusText.textContent = 'Vous êtes connecté en tant qu\'Administrateur Principal';
+                adminPrivilegesText.textContent = 'Vous avez tous les droits, y compris l\'ajout d\'autres administrateurs.';
+            } else if (estAdmin) {
+                adminStatusText.textContent = 'Vous êtes connecté en tant qu\'Administrateur Secondaire';
+                adminPrivilegesText.textContent = 'Vous avez accès à toutes les fonctionnalités sauf la gestion des administrateurs.';
+            }
+        }
+
+        updateSyncStatus();
+        configurerMenuParMode();
+        
+        const techList = document.getElementById('techList');
+        techList.innerHTML = techniciens.map(t => `<option value="${t.nom}">`).join('');
+        
+        const serviceSelect = document.getElementById('demandeService');
+        serviceSelect.innerHTML = '<option value="">-- Sélectionner service --</option>' + 
+            services.map(s => `<option value="${s.nom}">${s.nom}</option>`).join('');
+        
+        document.getElementById('numeroOrdre').value = genererNumeroOrdre();
+        document.getElementById('dateEmission').value = new Date().toISOString().split('T')[0];
+        
+        afficher(); 
+        afficherJournal();
+        afficherBesoins();
+        afficherMaintenance();
+        afficherDemandes();
+        afficherRebut();
+        calculerStatistiquesMaintenance();
+        
+        if (currentMode === 'admin') {
+            afficherListeAdmins();
+            afficherListeVisiteursEtTechs();
+            afficherLogs();
+        }
+    }
+
+    function afficherErreur() { 
+        document.getElementById('errorMsg').style.display = 'block'; 
+        setTimeout(() => document.getElementById('errorMsg').style.display = 'none', 2000); 
+    }
+
+    window.changerRubrique = function(rubrique) {
+        const pageActive = document.querySelector('.page.active');
+        if (pageActive) {
+            const currentPage = pageActive.id.replace('page', '').toLowerCase();
+            if (currentPage !== rubrique) {
+                historiquePages.push(currentPage);
+                if (historiquePages.length > 10) historiquePages.shift();
+            }
+        }
+        
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.menu-btn').forEach(b => b.classList.remove('active'));
+        
+        const pageMap = {
+            'inventaire': 'pageInventaire',
+            'journal': 'pageJournal',
+            'besoins': 'pageBesoins',
+            'maintenance': 'pageMaintenance',
+            'demande': 'pageDemande',
+            'rebut': 'pageRebut',
+            'planning': 'pagePlanning'
+        };
+        
+        if (pageMap[rubrique]) {
+            document.getElementById(pageMap[rubrique]).classList.add('active');
+            
+            document.querySelectorAll('.menu-btn').forEach(btn => {
+                if (btn.textContent.includes(rubrique.charAt(0).toUpperCase() + rubrique.slice(1)) ||
+                    (rubrique === 'demande' && btn.textContent.includes('Demande')) ||
+                    (rubrique === 'rebut' && btn.textContent.includes('Mis au rebut')) ||
+                    (rubrique === 'planning' && btn.textContent.includes('Planning'))) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            switch(rubrique) {
+                case 'inventaire':
+                    afficher();
+                    break;
+                case 'journal':
+                    afficherJournal();
+                    break;
+                case 'besoins':
+                    afficherBesoins();
+                    break;
+                case 'maintenance':
+                    afficherMaintenance();
+                    break;
+                case 'demande':
+                    afficherDemandes();
+                    break;
+                case 'rebut':
+                    afficherRebut();
+                    break;
+                case 'planning':
+                    calculerStatistiquesMaintenance();
+                    break;
+            }
+        }
+    };
+
+    window.ajouterVisiteur = function() {
+        if (currentMode !== 'admin') return;
+        const newCode = document.getElementById('newVisitorCode').value.trim();
+        if (!newCode) return alert("Entrez un code");
+        if (visiteurs.includes(newCode)) return alert("Existe déjà");
+        visiteurs.push(newCode);
+        localStorage.setItem('hsjda_visitors', JSON.stringify(visiteurs));
+        document.getElementById('newVisitorCode').value = '';
+        afficherListeVisiteursEtTechs();
+        ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Ajout visiteur: ${newCode}`);
+        showNotification('Code visiteur ajouté');
+    };
+
+    window.ajouterTechnicien = function() {
+        if (currentMode !== 'admin') return;
+        const code = document.getElementById('newTechCode').value.trim();
+        const nom = document.getElementById('newTechName').value.trim();
+        if (!code || !nom) return alert("Code et nom requis");
+        if (techniciens.some(t => t.code === code)) return alert("Code déjà utilisé");
+        techniciens.push({code, nom});
+        localStorage.setItem('hsjda_techniciens', JSON.stringify(techniciens));
+        document.getElementById('newTechCode').value = ''; 
+        document.getElementById('newTechName').value = '';
+        afficherListeVisiteursEtTechs();
+        ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Ajout technicien: ${nom}`);
+        showNotification('Technicien ajouté');
+    };
+
+    window.ajouterService = function() {
+        if (currentMode !== 'admin') return;
+        const code = document.getElementById('newServiceCode').value.trim();
+        const nom = document.getElementById('newServiceName').value.trim();
+        if (!code || !nom) return alert("Code et nom requis");
+        if (services.some(s => s.code === code)) return alert("Code déjà utilisé");
+        services.push({code, nom});
+        localStorage.setItem('hsjda_services', JSON.stringify(services));
+        document.getElementById('newServiceCode').value = ''; 
+        document.getElementById('newServiceName').value = '';
+        afficherListeVisiteursEtTechs();
+        ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Ajout service: ${nom}`);
+        showNotification('Service ajouté');
+    };
+
+    window.supprimerVisiteur = function(code) {
+        if (currentMode !== 'admin') return;
+        if (confirm(`Supprimer ${code} ?`)) { 
+            visiteurs = visiteurs.filter(v => v !== code); 
+            localStorage.setItem('hsjda_visitors', JSON.stringify(visiteurs)); 
+            afficherListeVisiteursEtTechs();
+            ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Suppression visiteur: ${code}`);
+            showNotification('Visiteur supprimé');
+        }
+    };
+
+    window.supprimerTechnicien = function(code) {
+        if (currentMode !== 'admin') return;
+        if (confirm(`Supprimer le technicien ?`)) { 
+            const tech = techniciens.find(t => t.code === code);
+            techniciens = techniciens.filter(t => t.code !== code); 
+            localStorage.setItem('hsjda_techniciens', JSON.stringify(techniciens)); 
+            afficherListeVisiteursEtTechs();
+            ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Suppression technicien: ${tech?.nom}`);
+            showNotification('Technicien supprimé');
+        }
+    };
+
+    window.supprimerService = function(code) {
+        if (currentMode !== 'admin') return;
+        if (confirm(`Supprimer le service ?`)) { 
+            const serv = services.find(s => s.code === code);
+            services = services.filter(s => s.code !== code); 
+            localStorage.setItem('hsjda_services', JSON.stringify(services)); 
+            afficherListeVisiteursEtTechs();
+            ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Suppression service: ${serv?.nom}`);
+            showNotification('Service supprimé');
+        }
+    };
+
+    function afficherListeVisiteursEtTechs() {
+        const vContainer = document.getElementById('visitorsContainer');
+        if (vContainer) {
+            vContainer.innerHTML = visiteurs.map(v => `
+                <div class="visitor-item">
+                    <span class="visitor-code">${v}</span>
+                    <button class="btn-danger" onclick="supprimerVisiteur('${v}')">Supprimer</button>
+                </div>
+            `).join('');
+        }
+        
+        const tContainer = document.getElementById('techsContainer');
+        if (tContainer) {
+            tContainer.innerHTML = techniciens.map(t => `
+                <div class="visitor-item">
+                    <span>${t.nom} (${t.code})</span>
+                    <button class="btn-danger" onclick="supprimerTechnicien('${t.code}')">Supprimer</button>
+                </div>
+            `).join('');
+        }
+        
+        const sContainer = document.getElementById('servicesContainer');
+        if (sContainer) {
+            sContainer.innerHTML = services.map(s => `
+                <div class="visitor-item">
+                    <span>${s.nom} (${s.code})</span>
+                    <button class="btn-danger" onclick="supprimerService('${s.code}')">Supprimer</button>
+                </div>
+            `).join('');
+        }
+    }
+
+    window.changerFondConnexion = function() {
+        const color1 = document.getElementById('bgColor1').value;
+        const color2 = document.getElementById('bgColor2').value;
+        
+        localStorage.setItem('hsjda_bg_color1', color1);
+        localStorage.setItem('hsjda_bg_color2', color2);
+        localStorage.removeItem('hsjda_bg_image');
+        
+        document.getElementById('loginOverlay').style.background = `linear-gradient(145deg, ${color1}, ${color2})`;
+    };
+
+    window.changerFondImage = function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imageData = e.target.result;
+                localStorage.setItem('hsjda_bg_image', imageData);
+                localStorage.removeItem('hsjda_bg_color1');
+                localStorage.removeItem('hsjda_bg_color2');
+                document.getElementById('loginOverlay').style.background = `url('${imageData}') center/cover no-repeat`;
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    window.reinitialiserFond = function() {
+        localStorage.removeItem('hsjda_bg_color1');
+        localStorage.removeItem('hsjda_bg_color2');
+        localStorage.removeItem('hsjda_bg_image');
+        document.getElementById('loginOverlay').style.background = 'linear-gradient(145deg, #1e2b37, #2c3e50)';
+        document.getElementById('bgColor1').value = '#1e2b37';
+        document.getElementById('bgColor2').value = '#2c3e50';
+    };
+
+    window.changerFondApp = function() {
+        const color = document.getElementById('appBgColor').value;
+        localStorage.setItem('hsjda_app_bg', color);
+        document.body.style.backgroundColor = color;
+    };
+
+    window.changerLogoAdmin = function(event) {
+        if (currentMode !== 'admin') return;
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const logoData = e.target.result;
+                document.getElementById('loginLogo').innerHTML = `<img src="${logoData}" style="width:100px; height:100px; border-radius:50%; object-fit:cover;">`;
+                document.getElementById('appLogo').innerHTML = `<img src="${logoData}" style="width:60px; height:60px; border-radius:18px; object-fit:cover;">`;
+                localStorage.setItem('hsjda_logo', logoData);
+                ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', 'Changement du logo');
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    window.changerLogoApp = function(event) {
+        if (currentMode !== 'admin') return;
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const logoData = e.target.result;
+                document.getElementById('loginLogo').innerHTML = `<img src="${logoData}" style="width:100px; height:100px; border-radius:50%; object-fit:cover;">`;
+                document.getElementById('appLogo').innerHTML = `<img src="${logoData}" style="width:60px; height:60px; border-radius:18px; object-fit:cover;">`;
+                localStorage.setItem('hsjda_logo', logoData);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    function genererMatricule(service, nom) { 
+        const annee = new Date().getFullYear(); 
+        const prefixe = service.trim().toUpperCase().substring(0,6).replace(/\s/g,''); 
+        const codeNom = nom.trim().toUpperCase().replace(/[^A-Z0-9]/g,'').substring(0,5) || 'EQP'; 
+        const compteur = (equipements.length + 1).toString().padStart(3,'0'); 
+        return `HSJDA/${prefixe}/${codeNom}/${annee}/${compteur}`; 
+    }
+
+    window.ajouterOuModifier = function() {
+        if (currentMode !== 'admin') return;
+        const nom = document.getElementById('nom').value.trim();
+        const service = document.getElementById('service').value;
+        if (!nom || !service) { alert("Nom et service obligatoires"); return; }
+        
+        const equipData = { 
+            nom, service, 
+            marque: document.getElementById('marque').value.trim() || "(non renseigné)", 
+            sn: document.getElementById('sn').value.trim() || "N/C", 
+            dateAcquisition: document.getElementById('dateAcquisition').value, 
+            dateMiseEnService: document.getElementById('dateMiseEnService').value, 
+            datePrev: document.getElementById('datePrev').value, 
+            garantie: document.getElementById('garantie').value,
+            typeMaintenance: document.getElementById('typeMaintenance').value,
+            societePrestation: document.getElementById('societePrestation').value.trim() || ''
+        };
+        
+        if (editIndex === -1) { 
+            equipData.matricule = genererMatricule(service, nom); 
+            equipData.etat = "Fonctionnel"; 
+            equipements.push(equipData); 
+            ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Ajout équipement: ${nom}`);
+            showNotification('Équipement ajouté');
+        } else { 
+            equipData.matricule = equipements[editIndex].matricule; 
+            equipData.etat = equipements[editIndex].etat; 
+            equipements[editIndex] = equipData; 
+            annulerModification(); 
+            ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Modification équipement: ${nom}`);
+            showNotification('Équipement modifié');
+        }
+        localStorage.setItem('hsjda_pro_data_v4', JSON.stringify(equipements)); 
+        afficher(); 
+        viderFormulaire();
+        afficherMaintenance();
+        calculerStatistiquesMaintenance();
+    };
+
+    window.modifierAppareil = function(index) { 
+        if (currentMode !== 'admin') return; 
+        const eq = equipements[index]; 
+        document.getElementById('nom').value = eq.nom || ''; 
+        document.getElementById('service').value = eq.service || ''; 
+        document.getElementById('marque').value = eq.marque === "(non renseigné)" ? '' : eq.marque || ''; 
+        document.getElementById('sn').value = eq.sn === "N/C" ? '' : eq.sn || ''; 
+        document.getElementById('dateAcquisition').value = eq.dateAcquisition || ''; 
+        document.getElementById('dateMiseEnService').value = eq.dateMiseEnService || ''; 
+        document.getElementById('datePrev').value = eq.datePrev || ''; 
+        document.getElementById('garantie').value = eq.garantie || 'OUI';
+        document.getElementById('typeMaintenance').value = eq.typeMaintenance || 'Interne';
+        document.getElementById('societePrestation').value = eq.societePrestation || '';
+        editIndex = index; 
+        document.getElementById('btnSubmit').innerHTML = '✏️ MODIFIER'; 
+        document.getElementById('btnAnnuler').style.display = 'block'; 
+    };
+
+    window.annulerModification = function() { 
+        editIndex = -1; 
+        document.getElementById('btnSubmit').innerHTML = '➕ ENREGISTRER'; 
+        document.getElementById('btnAnnuler').style.display = 'none'; 
+        viderFormulaire(); 
+    };
+
+    function viderFormulaire() { 
+        document.getElementById('nom').value = ''; 
+        document.getElementById('service').value = ''; 
+        document.getElementById('marque').value = ''; 
+        document.getElementById('sn').value = ''; 
+        document.getElementById('dateAcquisition').value = ''; 
+        document.getElementById('dateMiseEnService').value = ''; 
+        document.getElementById('datePrev').value = ''; 
+        document.getElementById('garantie').value = 'OUI';
+        document.getElementById('typeMaintenance').value = 'Interne';
+        document.getElementById('societePrestation').value = '';
+    }
+
+    window.changerEtat = function(index) { 
+        if (currentMode !== 'admin') return; 
+        if (index >= 0 && index < equipements.length) { 
+            equipements[index].etat = equipements[index].etat === 'Fonctionnel' ? 'En Panne' : 'Fonctionnel'; 
+            localStorage.setItem('hsjda_pro_data_v4', JSON.stringify(equipements)); 
+            afficher(); 
+            ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Changement état: ${equipements[index].nom} -> ${equipements[index].etat}`);
+            showNotification('État modifié');
+        } 
+    };
+
+    window.filtrer = function() { 
+        const filtre = document.getElementById('searchInput').value.toUpperCase(); 
+        const lignes = document.getElementById('tableBody').getElementsByTagName('tr'); 
+        for (let l of lignes) { 
+            let visible = false; 
+            for (let c of l.cells) { 
+                if (c.innerText.toUpperCase().includes(filtre)) { 
+                    visible = true; 
+                    break; 
+                } 
+            } 
+            l.style.display = visible ? '' : 'none'; 
+        } 
+    };
+
+    function getAlerteClass(datePrev) {
+        if (!datePrev) return 'alert-normal';
+        const today = new Date();
+        const maintDate = new Date(datePrev);
+        const diffTime = maintDate - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays <= 2) return 'alert-urgent';
+        if (diffDays <= 7) return 'alert-proche';
+        return 'alert-normal';
+    }
+
+    function getAlerteText(datePrev) {
+        if (!datePrev) return 'Non planifiée';
+        const today = new Date();
+        const maintDate = new Date(datePrev);
+        const diffTime = maintDate - today;
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays < 0) return `⚠️ Retard de ${Math.abs(diffDays)} jours`;
+        if (diffDays === 0) return '🔴 Aujourd\'hui';
+        if (diffDays === 1) return '🟠 Demain';
+        if (diffDays <= 7) return `🟡 Dans ${diffDays} jours`;
+        return `✅ Dans ${diffDays} jours`;
+    }
+
+    window.afficher = function() {
+        const tbody = document.getElementById('tableBody'); 
+        tbody.innerHTML = '';
+        
+        let equipementsAffiches = equipements;
+        
+        if (currentMode === 'service' && currentServiceInfo) {
+            const filtreService = document.getElementById('serviceFilter').value;
+            if (filtreService) {
+                equipementsAffiches = equipements.filter(e => e.service === filtreService);
+            }
+        }
+        
+        if (equipementsAffiches.length === 0) { 
+            tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; padding:35px;">Aucun équipement.</td></tr>'; 
+            return; 
+        }
+        
+        equipementsAffiches.forEach((eq, idx) => {
+            const etatClass = eq.etat === 'Fonctionnel' ? 'etat-badge' : 'etat-badge panne';
+            const peutModifier = currentMode === 'admin';
+            const alerteClass = getAlerteClass(eq.datePrev);
+            const alerteText = getAlerteText(eq.datePrev);
+            
+            const realIndex = equipements.findIndex(e => e.matricule === eq.matricule);
+            
+            const ligne = document.createElement('tr');
+            ligne.innerHTML = `
+                <td><span class="matricule">${eq.matricule || 'HSJDA/??'}</span></td>
+                <td><strong>${eq.nom}</strong><br><small>${eq.marque || ''} ${eq.sn ? '| S/N:' + eq.sn : ''}</small></td>
+                <td>${eq.service}</td>
+                <td>${eq.typeMaintenance || 'Interne'}</td>
+                <td>${eq.societePrestation || '-'}</td>
+                <td class="date-small">${eq.dateAcquisition || '—'}</td>
+                <td class="date-small">${eq.dateMiseEnService || '—'}</td>
+                <td class="date-small">${eq.datePrev || '⏳'}</td>
+                <td><span class="${alerteClass}" style="padding:4px 8px; border-radius:20px;">${alerteText}</span></td>
+                <td><span class="${etatClass}">${eq.etat || 'Fonctionnel'}</span></td>
+                <td>
+                    <div class="action-buttons">
+                        ${peutModifier ? `
+                            <button class="btn-etat ${eq.etat === 'Fonctionnel' ? '' : 'panne'}" onclick="changerEtat(${realIndex})">🔄</button>
+                            <button class="btn-modifier" onclick="modifierAppareil(${realIndex})">✏️</button>
+                            <button class="btn-rebut" onclick="ouvrirModalRebut(${realIndex})" title="Mettre au rebut">🗑️ Mettre au rebut</button>
+                        ` : ''}
+                    </div>
+                </td>`;
+            tbody.appendChild(ligne);
+        });
+    };
+
+    window.ajouterIntervention = function() {
+        if (currentMode === 'visitor') return;
+        const tech = document.getElementById('techNom').value.trim();
+        const service = document.getElementById('serviceInterv').value;
+        const equip = document.getElementById('equipInterv').value.trim();
+        if (!tech || !service || !equip) { alert("Technicien, service et équipement sont requis"); return; }
+        
+        const intervention = {
+            id: Date.now() + Math.random(),
+            technicien: tech,
+            service: service,
+            equipement: equip,
+            marqueModele: document.getElementById('marqueModele').value,
+            probleme: document.getElementById('probleme').value,
+            actionMenee: document.getElementById('actionMenee').value,
+            piecesChangees: document.getElementById('piecesChangees').value,
+            etatApres: document.getElementById('etatApres').value,
+            dateDebut: document.getElementById('dateDebut').value,
+            dateFin: document.getElementById('dateFin').value,
+            dateSaisie: new Date().toISOString()
+        };
+        interventions.unshift(intervention);
+        localStorage.setItem('hsjda_journal_v1', JSON.stringify(interventions));
+        afficherJournal();
+        
+        if (currentMode === 'admin') {
+            ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Ajout intervention par ${tech}`);
+        } else if (currentMode === 'technicien') {
+            ajouterLog(currentTechInfo?.nom || 'Technicien', 'Technicien', `Ajout intervention`);
+        }
+        
+        showNotification('Intervention ajoutée');
+        
+        if (currentMode !== 'technicien') {
+            document.getElementById('techNom').value = '';
+        }
+        document.getElementById('serviceInterv').value = ''; 
+        document.getElementById('equipInterv').value = '';
+        document.getElementById('marqueModele').value = ''; 
+        document.getElementById('probleme').value = '';
+        document.getElementById('actionMenee').value = ''; 
+        document.getElementById('piecesChangees').value = '';
+        document.getElementById('etatApres').value = 'Fonctionnel'; 
+        document.getElementById('dateDebut').value = '';
+        document.getElementById('dateFin').value = '';
+        
+        calculerStatistiquesMaintenance();
+    };
+
+    window.supprimerIntervention = function(id) {
+        if (currentMode !== 'admin') return;
+        if (!confirm("Supprimer cette intervention ?")) return;
+        interventions = interventions.filter(i => i.id != id);
+        localStorage.setItem('hsjda_journal_v1', JSON.stringify(interventions));
+        afficherJournal();
+        ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', 'Suppression intervention');
+        showNotification('Intervention supprimée');
+        calculerStatistiquesMaintenance();
+    };
+
+    function afficherJournal() {
+        const tbody = document.getElementById('journalTableBody');
+        tbody.innerHTML = '';
+        
+        let interventionsAffichees = interventions;
+        
+        if (currentMode === 'technicien' && currentTechInfo) {
+            interventionsAffichees = interventions.filter(i => i.technicien === currentTechInfo.nom);
+        }
+        
+        if (interventionsAffichees.length === 0) { 
+            tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;">Aucune intervention enregistrée.</td></tr>'; 
+            return; 
+        }
+        
+        interventionsAffichees.forEach((iv) => {
+            const peutSupprimer = currentMode === 'admin';
+            const ligne = document.createElement('tr');
+            ligne.innerHTML = `
+                <td>${iv.technicien}</td>
+                <td>${iv.service}</td>
+                <td>${iv.equipement} ${iv.marqueModele ? '(' + iv.marqueModele + ')' : ''}</td>
+                <td>${iv.probleme || ''}</td>
+                <td>${iv.actionMenee || ''}</td>
+                <td>${iv.piecesChangees || ''}</td>
+                <td>${iv.etatApres || ''}</td>
+                <td>${iv.dateDebut ? iv.dateDebut.replace('T', ' ') : ''}</td>
+                <td>${iv.dateFin ? iv.dateFin.replace('T', ' ') : ''}</td>
+                <td>${peutSupprimer ? '<button class="btn-danger" onclick="supprimerIntervention(' + iv.id + ')">🗑️</button>' : ''}</td>`;
+            tbody.appendChild(ligne);
+        });
+    }
+
+    function genererNumeroOrdre() {
+        const annee = new Date().getFullYear();
+        const compteur = (expressionsBesoin.length + 1).toString().padStart(3, '0');
+        return `BES-${annee}-${compteur}`;
+    }
+
+    window.ajouterBesoin = function() {
+        if (currentMode === 'visitor') return;
+        
+        const dateEmission = document.getElementById('dateEmission').value;
+        const designation = document.getElementById('designationBesoin').value.trim();
+        
+        if (!dateEmission || !designation) {
+            alert("Date d'émission et désignation sont obligatoires");
+            return;
+        }
+
+        const besoin = {
+            id: Date.now(),
+            numeroOrdre: document.getElementById('numeroOrdre').value || genererNumeroOrdre(),
+            dateEmission: dateEmission,
+            designation: designation,
+            urgence: document.getElementById('urgenceBesoin').value,
+            statut: document.getElementById('statutBesoin').value,
+            couleur: document.getElementById('couleurImportance').value,
+            dateCreation: new Date().toISOString(),
+            createdBy: currentMode === 'technicien' ? currentTechInfo?.nom : 
+                      currentMode === 'admin' ? currentAdminInfo?.nom : 'Utilisateur'
+        };
+
+        expressionsBesoin.unshift(besoin);
+        localStorage.setItem('hsjda_besoins_v1', JSON.stringify(expressionsBesoin));
+        
+        if (currentMode === 'admin') {
+            ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Ajout besoin: ${designation}`);
+        } else if (currentMode === 'technicien') {
+            ajouterLog(currentTechInfo?.nom || 'Technicien', 'Technicien', `Ajout besoin`);
+        }
+        
+        showNotification('Besoin ajouté');
+        
+        document.getElementById('dateEmission').value = new Date().toISOString().split('T')[0];
+        document.getElementById('designationBesoin').value = '';
+        document.getElementById('urgenceBesoin').value = 'Normale';
+        document.getElementById('statutBesoin').value = 'En cours';
+        document.getElementById('couleurImportance').value = '#ff6b6b';
+        document.getElementById('numeroOrdre').value = genererNumeroOrdre();
+        
+        afficherBesoins();
+    };
+
+    window.supprimerBesoin = function(id) {
+        if (currentMode !== 'admin') return;
+        if (!confirm("Supprimer cette expression de besoin ?")) return;
+        expressionsBesoin = expressionsBesoin.filter(b => b.id != id);
+        localStorage.setItem('hsjda_besoins_v1', JSON.stringify(expressionsBesoin));
+        afficherBesoins();
+        ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', 'Suppression besoin');
+        showNotification('Besoin supprimé');
+    };
+
+    window.modifierStatutBesoin = function(id, nouveauStatut) {
+        if (currentMode === 'visitor') return;
+        const besoin = expressionsBesoin.find(b => b.id == id);
+        if (besoin) {
+            besoin.statut = nouveauStatut;
+            localStorage.setItem('hsjda_besoins_v1', JSON.stringify(expressionsBesoin));
+            afficherBesoins();
+            ajouterLog(currentMode === 'admin' ? currentAdminInfo?.nom : currentTechInfo?.nom, 
+                      currentMode, `Modification statut besoin: ${nouveauStatut}`);
+            showNotification('Statut modifié');
+        }
+    };
+
+    function afficherBesoins() {
+        const tbody = document.getElementById('besoinsTableBody');
+        tbody.innerHTML = '';
+        
+        if (expressionsBesoin.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:35px;">Aucune expression de besoin enregistrée.</td></tr>';
+            return;
+        }
+
+        expressionsBesoin.forEach((besoin) => {
+            let urgenceClass = '';
+            if (besoin.urgence === 'Très urgent') urgenceClass = 'urgence-haute';
+            else if (besoin.urgence === 'Urgent') urgenceClass = 'urgence-moyenne';
+            
+            let statutClass = 'statut-attente';
+            if (besoin.statut === 'En cours') statutClass = 'statut-encours';
+            else if (besoin.statut === 'Réalisé') statutClass = 'statut-realise';
+
+            const peutModifier = currentMode !== 'visitor';
+            
+            const ligne = document.createElement('tr');
+            ligne.innerHTML = `
+                <td><strong>${besoin.numeroOrdre}</strong></td>
+                <td>${besoin.dateEmission}</td>
+                <td>${besoin.designation}</td>
+                <td><span class="${urgenceClass}" style="padding:4px 8px; border-radius:20px;">${besoin.urgence}</span></td>
+                <td><span class="statut-badge ${statutClass}">${besoin.statut}</span></td>
+                <td><div style="width:30px; height:30px; background:${besoin.couleur}; border-radius:8px;"></div></td>
+                <td>
+                    <div class="action-buttons">
+                        ${peutModifier ? `
+                            <button class="btn-warning" onclick="modifierStatutBesoin(${besoin.id}, 'En cours')">⏳</button>
+                            <button class="btn-success" onclick="modifierStatutBesoin(${besoin.id}, 'Réalisé')">✅</button>
+                            <button class="btn-etat" onclick="modifierStatutBesoin(${besoin.id}, 'En attente')">⏸️</button>
+                            ${currentMode === 'admin' ? `<button class="btn-danger" onclick="supprimerBesoin(${besoin.id})">🗑️</button>` : ''}
+                        ` : ''}
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(ligne);
+        });
+    }
+
+    function afficherMaintenance() {
+        const maintTbody = document.getElementById('maintenanceTableBody');
+        const externeTbody = document.getElementById('externeTableBody');
+        
+        const today = new Date().toISOString().split('T')[0];
+        const todayMaints = equipements.filter(e => e.datePrev === today).length;
+        const weekMaints = equipements.filter(e => {
+            if (!e.datePrev) return false;
+            const date = new Date(e.datePrev);
+            const now = new Date();
+            const diffDays = Math.ceil((date - now) / (1000 * 60 * 60 * 24));
+            return diffDays >= 0 && diffDays <= 7;
+        }).length;
+        
+        const urgentMaints = equipements.filter(e => {
+            if (!e.datePrev) return false;
+            const date = new Date(e.datePrev);
+            const now = new Date();
+            const diffDays = Math.ceil((date - now) / (1000 * 60 * 60 * 24));
+            return diffDays <= 2;
+        }).length;
+        
+        const procheMaints = equipements.filter(e => {
+            if (!e.datePrev) return false;
+            const date = new Date(e.datePrev);
+            const now = new Date();
+            const diffDays = Math.ceil((date - now) / (1000 * 60 * 60 * 24));
+            return diffDays > 2 && diffDays <= 7;
+        }).length;
+
+        document.getElementById('statsToday').textContent = todayMaints;
+        document.getElementById('statsWeek').textContent = weekMaints;
+        document.getElementById('statsUrgent').textContent = urgentMaints;
+        document.getElementById('statsProche').textContent = procheMaints;
+
+        maintTbody.innerHTML = '';
+        equipements.sort((a, b) => (a.datePrev || '9999-12-31').localeCompare(b.datePrev || '9999-12-31'));
+        
+        let equipementsMaint = equipements;
+        
+        equipementsMaint.forEach(eq => {
+            if (!eq.datePrev) return;
+            const alerteClass = getAlerteClass(eq.datePrev);
+            const alerteText = getAlerteText(eq.datePrev);
+            
+            const ligne = document.createElement('tr');
+            ligne.innerHTML = `
+                <td><span class="matricule">${eq.matricule}</span></td>
+                <td>${eq.service}</td>
+                <td>${eq.nom}</td>
+                <td>${eq.marque}</td>
+                <td>${eq.typeMaintenance || 'Interne'}</td>
+                <td>${eq.societePrestation || '-'}</td>
+                <td>${eq.datePrev}</td>
+                <td><span class="${alerteClass}" style="padding:4px 8px; border-radius:20px;">${alerteText}</span></td>
+                <td><span class="etat-badge ${eq.etat === 'En Panne' ? 'panne' : ''}">${eq.etat}</span></td>
+            `;
+            maintTbody.appendChild(ligne);
+        });
+
+        externeTbody.innerHTML = '';
+        const externeEq = equipements.filter(e => e.typeMaintenance === 'Externe' && e.societePrestation);
+        
+        externeEq.forEach(eq => {
+            if (!eq.datePrev) return;
+            const dateRetour = new Date(eq.datePrev);
+            const today = new Date();
+            const diffDays = Math.ceil((dateRetour - today) / (1000 * 60 * 60 * 24));
+            const joursRestants = diffDays > 0 ? diffDays : 0;
+            
+            const ligne = document.createElement('tr');
+            ligne.innerHTML = `
+                <td><span class="matricule">${eq.matricule}</span></td>
+                <td>${eq.service}</td>
+                <td>${eq.nom}</td>
+                <td>${eq.societePrestation}</td>
+                <td>${eq.datePrev}</td>
+                <td><span class="${diffDays <= 2 ? 'alert-urgent' : diffDays <= 7 ? 'alert-proche' : 'alert-normal'}" style="padding:4px 8px; border-radius:20px;">${joursRestants} jours</span></td>
+            `;
+            externeTbody.appendChild(ligne);
+        });
+    }
+
+    window.soumettreDemande = function() {
+        if (currentMode !== 'service' && !estAdmin) {
+            alert("Veuillez d'abord vous connecter avec votre code service");
+            return;
+        }
+
+        const service = document.getElementById('demandeService').value;
+        const nom = document.getElementById('demandeNom').value.trim();
+        const nature = document.getElementById('demandeNature').value;
+        const equipement = document.getElementById('demandeEquipement').value.trim();
+        const panne = document.getElementById('demandePanne').value.trim();
+
+        if (!service || !nom || !nature || !equipement || !panne) {
+            alert("Veuillez remplir tous les champs obligatoires");
+            return;
+        }
+
+        const demande = {
+            id: Date.now(),
+            numero: `DEM-${new Date().getFullYear()}-${(demandes.length + 1).toString().padStart(3, '0')}`,
+            date: new Date().toISOString().split('T')[0],
+            service: service,
+            demandeur: nom,
+            nature: nature,
+            equipement: equipement,
+            code: document.getElementById('demandeCode').value.trim() || 'N/A',
+            panne: panne,
+            urgence: document.getElementById('demandeUrgence').value || 'Normale',
+            statut: 'En attente',
+            serviceCode: currentServiceInfo?.code
+        };
+
+        demandes.unshift(demande);
+        localStorage.setItem('hsjda_demandes_v1', JSON.stringify(demandes));
+        
+        ajouterLog(currentServiceInfo?.nom || 'Service', 'Service', `Nouvelle demande: ${equipement}`);
+        showNotification('Demande envoyée avec succès !');
+        
+        document.getElementById('demandeService').value = currentServiceInfo?.nom || '';
+        document.getElementById('demandeNom').value = '';
+        document.getElementById('demandeNature').value = '';
+        document.getElementById('demandeEquipement').value = '';
+        document.getElementById('demandeCode').value = '';
+        document.getElementById('demandePanne').value = '';
+        document.getElementById('demandeUrgence').value = '';
+        
+        afficherDemandes();
+    };
+
+    function afficherDemandes() {
+        const tbody = document.getElementById('demandesTableBody');
+        tbody.innerHTML = '';
+        
+        let demandesAffichees = demandes;
+        if (currentMode === 'service' && currentServiceInfo) {
+            demandesAffichees = demandes.filter(d => d.serviceCode === currentServiceInfo.code);
+        }
+        
+        if (demandesAffichees.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;">Aucune demande enregistrée.</td></tr>';
+            return;
+        }
+
+        demandesAffichees.forEach(demande => {
+            const peutModifier = currentMode === 'admin';
+            const ligne = document.createElement('tr');
+            ligne.innerHTML = `
+                <td><strong>${demande.numero}</strong></td>
+                <td>${demande.date}</td>
+                <td>${demande.service}</td>
+                <td>${demande.demandeur}</td>
+                <td>${demande.nature}</td>
+                <td>${demande.equipement}</td>
+                <td>${demande.panne.substring(0, 30)}${demande.panne.length > 30 ? '...' : ''}</td>
+                <td><span class="statut-badge statut-attente">${demande.statut}</span></td>
+                <td>
+                    ${peutModifier ? `
+                        <button class="btn-success btn-small" onclick="modifierStatutDemande(${demande.id}, 'Traitée')">✅ Traiter</button>
+                    ` : ''}
+                </td>
+            `;
+            tbody.appendChild(ligne);
+        });
+    }
+
+    window.modifierStatutDemande = function(id, nouveauStatut) {
+        if (currentMode !== 'admin') return;
+        const demande = demandes.find(d => d.id == id);
+        if (demande) {
+            demande.statut = nouveauStatut;
+            localStorage.setItem('hsjda_demandes_v1', JSON.stringify(demandes));
+            afficherDemandes();
+            showNotification('Statut de la demande modifié');
+        }
+    };
+
+    window.sauvegarderDonnees = function() {
+        const data = { 
+            administrateurs,
+            equipements, 
+            equipementsRebut,
+            visiteurs, 
+            techniciens, 
+            services,
+            interventions, 
+            expressionsBesoin,
+            demandes,
+            logsConnexion,
+            date: new Date().toISOString(), 
+            version: '7.0' 
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a'); 
+        a.href = URL.createObjectURL(blob); 
+        a.download = `hsjda_complete_${new Date().toISOString().split('T')[0]}.json`; 
+        document.body.appendChild(a); 
+        a.click(); 
+        document.body.removeChild(a); 
+        URL.revokeObjectURL(blob.url);
+        showNotification('Sauvegarde téléchargée');
+    };
+
+    window.restaurerDonnees = function() { 
+        document.getElementById('restoreFile').click(); 
+    };
+
+    window.importerDonnees = function(event) {
+        const file = event.target.files[0]; 
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                
+                if (data.administrateurs) { 
+                    administrateurs = data.administrateurs; 
+                    localStorage.setItem('hsjda_administrateurs', JSON.stringify(administrateurs)); 
+                }
+                if (data.equipements) { 
+                    equipements = data.equipements; 
+                    localStorage.setItem('hsjda_pro_data_v4', JSON.stringify(equipements)); 
+                }
+                if (data.equipementsRebut) {
+                    equipementsRebut = data.equipementsRebut;
+                    localStorage.setItem('hsjda_rebut_v1', JSON.stringify(equipementsRebut));
+                }
+                if (data.visiteurs) { 
+                    visiteurs = data.visiteurs; 
+                    localStorage.setItem('hsjda_visitors', JSON.stringify(visiteurs)); 
+                }
+                if (data.techniciens) { 
+                    techniciens = data.techniciens; 
+                    localStorage.setItem('hsjda_techniciens', JSON.stringify(techniciens)); 
+                }
+                if (data.services) { 
+                    services = data.services; 
+                    localStorage.setItem('hsjda_services', JSON.stringify(services)); 
+                }
+                if (data.interventions) { 
+                    interventions = data.interventions; 
+                    localStorage.setItem('hsjda_journal_v1', JSON.stringify(interventions)); 
+                }
+                if (data.expressionsBesoin) { 
+                    expressionsBesoin = data.expressionsBesoin; 
+                    localStorage.setItem('hsjda_besoins_v1', JSON.stringify(expressionsBesoin)); 
+                }
+                if (data.demandes) { 
+                    demandes = data.demandes; 
+                    localStorage.setItem('hsjda_demandes_v1', JSON.stringify(demandes)); 
+                }
+                if (data.logsConnexion) {
+                    logsConnexion = data.logsConnexion;
+                    localStorage.setItem('hsjda_logs', JSON.stringify(logsConnexion));
+                }
+                
+                if (currentMode === 'admin') {
+                    afficherListeAdmins();
+                    afficherListeVisiteursEtTechs();
+                    afficherLogs();
+                }
+                
+                afficher(); 
+                afficherJournal(); 
+                afficherBesoins();
+                afficherMaintenance();
+                afficherDemandes();
+                afficherRebut();
+                calculerStatistiquesMaintenance();
+                
+                showNotification('Restauration terminée');
+            } catch (er) { 
+                alert('Fichier invalide'); 
+            }
+        }; 
+        reader.readAsText(file); 
+        event.target.value = '';
+    };
+
+    window.exporterJournalPDF = function() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+        
+        doc.setFillColor(26, 59, 64); 
+        doc.rect(0, 0, 297, 20, 'F'); 
+        doc.setTextColor(255, 255, 255); 
+        doc.setFontSize(14); 
+        doc.text("JOURNAL DES INTERVENTIONS TECHNIQUES - HSJDA", 15, 13);
+        
+        doc.setTextColor(0, 0, 0); 
+        doc.setFontSize(8); 
+        let y = 30;
+        
+        doc.setFillColor(220, 240, 235); 
+        doc.rect(10, y - 5, 277, 8, 'F'); 
+        doc.setFont(undefined, 'bold');
+        doc.text("Technicien", 12, y); 
+        doc.text("Service", 42, y); 
+        doc.text("Equipement", 70, y); 
+        doc.text("Problème", 110, y); 
+        doc.text("Actions", 140, y); 
+        doc.text("Pièces", 170, y); 
+        doc.text("État", 195, y); 
+        doc.text("Début", 215, y); 
+        doc.text("Fin", 245, y);
+        doc.setFont(undefined, 'normal'); 
+        y += 5;
+        
+        interventions.forEach(iv => {
+            if (y > 180) { 
+                doc.addPage(); 
+                y = 20; 
+                doc.setFillColor(220, 240, 235); 
+                doc.rect(10, y - 5, 277, 8, 'F'); 
+                doc.setFont(undefined, 'bold'); 
+                doc.text("Technicien", 12, y); 
+                doc.text("Service", 42, y); 
+                doc.text("Equipement", 70, y); 
+                doc.text("Problème", 110, y); 
+                doc.text("Actions", 140, y); 
+                doc.text("Pièces", 170, y); 
+                doc.text("État", 195, y); 
+                doc.text("Début", 215, y); 
+                doc.text("Fin", 245, y); 
+                doc.setFont(undefined, 'normal'); 
+                y += 5; 
+            }
+            doc.text(iv.technicien.substring(0, 12), 12, y); 
+            doc.text(iv.service.substring(0, 8), 42, y); 
+            doc.text(iv.equipement.substring(0, 10), 70, y); 
+            doc.text((iv.probleme || '').substring(0, 12), 110, y); 
+            doc.text((iv.actionMenee || '').substring(0, 12), 140, y); 
+            doc.text((iv.piecesChangees || '').substring(0, 10), 170, y); 
+            doc.text(iv.etatApres || '', 195, y); 
+            doc.text((iv.dateDebut || '').replace('T', ' ').substring(0, 12), 215, y); 
+            doc.text((iv.dateFin || '').replace('T', ' ').substring(0, 12), 245, y); 
+            y += 5;
+        });
+        
+        doc.save("Journal_Interventions_HSJDA.pdf");
+    };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('passInput').addEventListener('keypress', (e) => { 
+            if (e.key === 'Enter') verifierCode('admin'); 
+        });
+        
+        if (equipements.length === 0) {
+            equipements.push({ 
+                matricule: "HSJDA/URG/ECG/2025/001", 
+                nom: "Electrocardiographe", 
+                service: "URGENCE", 
+                marque: "GE", 
+                sn: "EC12345", 
+                dateAcquisition: "2023-05-12", 
+                dateMiseEnService: "2023-06-01", 
+                datePrev: "2025-06-01", 
+                garantie: "OUI",
+                typeMaintenance: "Interne",
+                societePrestation: "",
+                etat: "Fonctionnel" 
+            });
+            equipements.push({ 
+                matricule: "HSJDA/LAB/CENT/2025/003", 
+                nom: "Centrifugeuse", 
+                service: "LABORATOIRE", 
+                marque: "Eppendorf", 
+                sn: "CEN5544", 
+                dateAcquisition: "2022-11-03", 
+                dateMiseEnService: "2022-11-20", 
+                datePrev: "2024-11-20", 
+                garantie: "NON",
+                typeMaintenance: "Externe",
+                societePrestation: "MED-TECH Services",
+                etat: "En Panne" 
+            });
+            localStorage.setItem('hsjda_pro_data_v4', JSON.stringify(equipements));
+        }
+    });
+})();
+</script>
+</body>
+</html>
