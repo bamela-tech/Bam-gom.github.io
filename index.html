@@ -106,6 +106,44 @@
             padding-bottom: 12px; 
         }
         
+        .slogan {
+            font-style: italic;
+            color: #f1c40f;
+            margin: 15px 0;
+            font-size: 1rem;
+            border-top: 1px dashed #b0bec5;
+            border-bottom: 1px dashed #b0bec5;
+            padding: 10px 0;
+            font-weight: 500;
+        }
+        
+        .contact-info {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #2c3e50;
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 30px;
+            border: 1px solid #27ae60;
+        }
+        
+        .contact-info a {
+            color: #27ae60;
+            text-decoration: none;
+            font-weight: bold;
+            margin: 0 5px;
+        }
+        
+        .contact-info a:hover {
+            text-decoration: underline;
+        }
+        
+        .contact-info .label {
+            font-weight: 600;
+            color: #1e5945;
+            margin-bottom: 5px;
+        }
+        
         #passInput, #adminCodeInput { 
             width: 100%; 
             padding: 14px 18px; 
@@ -376,7 +414,7 @@
             cursor: not-allowed; 
         }
         
-        .btn-add, .btn-cancel, .btn-danger, .btn-warning, .btn-success, .btn-info, .btn-backup, .btn-restore, .btn-sync, .btn-switch-mode, .btn-return-admin, .btn-rebut, .btn-plan { 
+        .btn-add, .btn-cancel, .btn-danger, .btn-warning, .btn-success, .btn-info, .btn-backup, .btn-restore, .btn-sync, .btn-switch-mode, .btn-return-admin, .btn-rebut, .btn-plan, .btn-visitor-config { 
             border: none; 
             padding: 12px 15px; 
             cursor: pointer; 
@@ -447,6 +485,16 @@
             font-size: 0.8rem;
         }
         .btn-plan:hover { background: #2980b9; }
+        
+        .btn-visitor-config {
+            background: #9b59b6;
+            color: white;
+            width: 100%;
+            margin: 10px 0;
+        }
+        .btn-visitor-config:hover {
+            background: #8e44ad;
+        }
         
         .search-box { 
             width: 100%; 
@@ -942,6 +990,109 @@
             margin-left: 10px;
         }
         
+        /* Tableau des permissions */
+        .permissions-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        
+        .permissions-table th {
+            background: #1e5945;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+        
+        .permissions-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .permissions-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .permissions-table .allowed {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        
+        .permissions-table .not-allowed {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .permissions-table .readonly {
+            color: #f39c12;
+            font-weight: bold;
+        }
+        
+        /* Configuration visiteur */
+        .visitor-config {
+            background: #f0f7fa;
+            padding: 20px;
+            border-radius: 16px;
+            margin: 20px 0;
+            border: 2px solid #3498db;
+        }
+        
+        .visitor-config h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+        
+        .config-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 12px 0;
+            padding: 10px 15px;
+            background: white;
+            border-radius: 30px;
+            border: 1px solid #bdc3c7;
+            transition: all 0.2s;
+        }
+        
+        .config-checkbox:hover {
+            border-color: #3498db;
+            box-shadow: 0 2px 8px rgba(52,152,219,0.2);
+        }
+        
+        .config-checkbox input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #27ae60;
+        }
+        
+        .config-checkbox label {
+            flex: 1;
+            cursor: pointer;
+            font-weight: 500;
+            color: #2c3e50;
+        }
+        
+        .config-checkbox span {
+            color: #7f8c8d;
+            font-size: 0.8rem;
+        }
+        
+        .config-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .config-actions button {
+            flex: 1;
+        }
+        
         /* Responsive pour tablettes et mobiles */
         @media (max-width: 768px) {
             body { padding: 10px; }
@@ -1004,6 +1155,15 @@
                 width: 100%;
                 margin: 2px 0;
             }
+            
+            .permissions-table {
+                font-size: 0.8rem;
+            }
+            
+            .permissions-table th,
+            .permissions-table td {
+                padding: 8px 4px;
+            }
         }
         
         @media (max-width: 480px) {
@@ -1045,11 +1205,25 @@
         </div>
         <h2>HSJDA</h2>
         <p>Hôpital Saint Jean de Dieu d'Afagnan</p>
+        
+        <div class="slogan">
+            "Frère, faites-vous du bien en faisant du bien"
+        </div>
+        
         <input type="password" id="passInput" placeholder="● Code secret ●" autofocus>
+        
         <button class="btn-login" onclick="verifierCode('admin')">Connexion Admin</button>
         <button class="btn-visitor" onclick="verifierCode('visitor')">Connexion Visiteur</button>
         <button class="btn-visitor" onclick="promptTechnicien()" style="background:#f39c12; color:#1e3c2f;">🔧 Connexion Technicien</button>
         <button class="btn-visitor" onclick="promptService()" style="background:#9b59b6; color:white;">🏥 Connexion Service</button>
+        
+        <div class="contact-info">
+            <div class="label">📞 Contact Administrateur Principal :</div>
+            <div>
+                <a href="tel:+22890266288">🇹🇬 +228 90 26 62 88</a> | 
+                <a href="tel:+22999991051">🇧🇯 +229 99 99 10 51</a>
+            </div>
+        </div>
         
         <p id="errorMsg">⛔ Code incorrect !</p>
         <p class="info-mode">👤 Contactez l'administrateur principal pour obtenir un code d'accès</p>
@@ -1149,7 +1323,7 @@
         <span id="lastSync"></span>
     </div>
 
-    <!-- Panneau de changement de mode pour l'admin (visible seulement en mode admin) -->
+    <!-- Panneau de changement de mode pour l'admin principal uniquement -->
     <div id="modeSwitchPanel" class="mode-switch-panel" style="display: none;">
         <button class="btn-switch-mode" onclick="changerMode('technicien')">🔧 Mode Technicien</button>
         <button class="btn-switch-mode" onclick="changerMode('visitor')">👁️ Mode Visiteur</button>
@@ -1180,8 +1354,7 @@
         <button class="menu-btn" onclick="changerRubrique('rebut')" id="menuRebut">🗑️ Mis au rebut</button>
         <button class="menu-btn" onclick="changerRubrique('planning')" id="menuPlanning">📊 Planning Maintenance</button>
     </div>
-
-    <!-- PAGE INVENTAIRE -->
+        <!-- PAGE INVENTAIRE -->
     <div id="pageInventaire" class="page active">
         <input type="text" id="searchInput" class="search-box" placeholder="🔍 Rechercher (matricule, nom, service...)" onkeyup="filtrer()">
 
@@ -1568,6 +1741,117 @@
             <p id="adminPrivilegesText">Vous avez tous les droits, y compris l'ajout d'autres administrateurs.</p>
         </div>
 
+        <!-- Tableau des permissions pour les admins secondaires -->
+        <div class="admin-section">
+            <h3>📋 Permissions des administrateurs</h3>
+            <table class="permissions-table">
+                <thead>
+                    <tr>
+                        <th>Fonctionnalité</th>
+                        <th>Admin Principal</th>
+                        <th>Admin Secondaire</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Journal des connexions</strong></td>
+                        <td class="allowed">✅ Visible</td>
+                        <td class="not-allowed">❌ Non visible</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Effacer les logs</strong></td>
+                        <td class="allowed">✅ Autorisation</td>
+                        <td class="not-allowed">❌ Non autorisé</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Personnalisation (fonds d'écran)</strong></td>
+                        <td class="allowed">✅ Autorisation</td>
+                        <td class="not-allowed">❌ Non autorisé</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Changer le logo</strong></td>
+                        <td class="allowed">✅ Autorisation</td>
+                        <td class="not-allowed">❌ Non autorisé</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Sauvegarde locale</strong></td>
+                        <td class="allowed">✅ Autorisation</td>
+                        <td class="not-allowed">❌ Non autorisé</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Restauration</strong></td>
+                        <td class="allowed">✅ Autorisation</td>
+                        <td class="not-allowed">❌ Non autorisé</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Synchronisation en ligne</strong></td>
+                        <td class="allowed">✅ Autorisation</td>
+                        <td class="not-allowed">❌ Non autorisé</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Configuration Email</strong></td>
+                        <td class="allowed">✅ Autorisation</td>
+                        <td class="not-allowed">❌ Non autorisé</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Gestion des administrateurs</strong></td>
+                        <td class="allowed">✅ Autorisation</td>
+                        <td class="not-allowed">❌ Non autorisé</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Configuration des accès visiteurs -->
+        <div class="admin-section">
+            <h3>👁️ Configuration des accès visiteurs</h3>
+            <p class="info-mode">Sélectionnez les volets que les visiteurs peuvent voir en lecture seule :</p>
+            
+            <div class="visitor-config">
+                <div class="config-checkbox">
+                    <input type="checkbox" id="visitorInventaire" checked>
+                    <label>📋 Inventaire</label>
+                    <span>(lecture seule)</span>
+                </div>
+                <div class="config-checkbox">
+                    <input type="checkbox" id="visitorJournal">
+                    <label>📓 Journal des interventions</label>
+                    <span>(lecture seule)</span>
+                </div>
+                <div class="config-checkbox">
+                    <input type="checkbox" id="visitorBesoins">
+                    <label>📝 Expression de besoin</label>
+                    <span>(lecture seule)</span>
+                </div>
+                <div class="config-checkbox">
+                    <input type="checkbox" id="visitorMaintenance">
+                    <label>🔧 Maintenance</label>
+                    <span>(lecture seule)</span>
+                </div>
+                <div class="config-checkbox">
+                    <input type="checkbox" id="visitorDemande">
+                    <label>📨 Demande de service</label>
+                    <span>(lecture seule)</span>
+                </div>
+                <div class="config-checkbox">
+                    <input type="checkbox" id="visitorRebut">
+                    <label>🗑️ Mis au rebut</label>
+                    <span>(lecture seule)</span>
+                </div>
+                <div class="config-checkbox">
+                    <input type="checkbox" id="visitorPlanning">
+                    <label>📊 Planning Maintenance</label>
+                    <span>(lecture seule)</span>
+                </div>
+                
+                <div class="config-actions">
+                    <button class="btn-success" onclick="sauvegarderConfigVisiteur()">💾 Sauvegarder configuration</button>
+                    <button class="btn-info" onclick="selectionnerToutVisiteur(true)">✅ Tout sélectionner</button>
+                    <button class="btn-warning" onclick="selectionnerToutVisiteur(false)">⬜ Tout désélectionner</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Changement de mot de passe pour tous les utilisateurs -->
         <div class="password-change" id="passwordChangeSection">
             <h3>🔐 Changer mon mot de passe</h3>
@@ -1714,7 +1998,6 @@
         <button class="btn-logout" onclick="deconnexion()">🚪 Déconnexion</button>
     </div>
 </div>
-
 <script>
 (function() {
     // Données
@@ -1745,9 +2028,20 @@
     let estAdminPrincipal = false;
     
     let equipementEnCoursDeRebut = null;
+    
+    // Configuration visiteur
+    let configVisiteur = {
+        inventaire: true,
+        journal: false,
+        besoins: false,
+        maintenance: false,
+        demande: false,
+        rebut: false,
+        planning: false
+    };
 
-    // Initialisation EmailJS
-    emailjs.init("YOUR_USER_ID");
+    // Initialisation EmailJS - avec vos identifiants
+    emailjs.init("Gg0-z4pm0nEr66hAX");
 
     // Chargement initial
     try {
@@ -1768,23 +2062,27 @@
             CODE_ADMIN = administrateurs[0].code;
         }
         
+        // Logs de connexion
         const logsStored = localStorage.getItem('hsjda_logs');
         if (logsStored) {
             logsConnexion = JSON.parse(logsStored);
         }
         
+        // Équipements
         const storedEq = localStorage.getItem('hsjda_pro_data_v4');
         if (storedEq) { 
             equipements = JSON.parse(storedEq); 
             if(!Array.isArray(equipements)) equipements = []; 
         }
         
+        // Équipements rebutés
         const rebutStored = localStorage.getItem('hsjda_rebut_v1');
         if (rebutStored) {
             equipementsRebut = JSON.parse(rebutStored);
             if(!Array.isArray(equipementsRebut)) equipementsRebut = [];
         }
         
+        // Visiteurs
         const visitorsStored = localStorage.getItem('hsjda_visitors');
         if (visitorsStored) { 
             visiteurs = JSON.parse(visitorsStored); 
@@ -1794,6 +2092,7 @@
             localStorage.setItem('hsjda_visitors', JSON.stringify(visiteurs)); 
         }
         
+        // Techniciens
         const techStored = localStorage.getItem('hsjda_techniciens');
         if (techStored) { 
             techniciens = JSON.parse(techStored); 
@@ -1807,6 +2106,7 @@
             localStorage.setItem('hsjda_techniciens', JSON.stringify(techniciens)); 
         }
         
+        // Services
         const servicesStored = localStorage.getItem('hsjda_services');
         if (servicesStored) { 
             services = JSON.parse(servicesStored); 
@@ -1821,24 +2121,28 @@
             localStorage.setItem('hsjda_services', JSON.stringify(services)); 
         }
         
+        // Interventions
         const intervStored = localStorage.getItem('hsjda_journal_v1');
         if (intervStored) { 
             interventions = JSON.parse(intervStored); 
             if(!Array.isArray(interventions)) interventions = []; 
         }
         
+        // Besoins
         const besoinsStored = localStorage.getItem('hsjda_besoins_v1');
         if (besoinsStored) { 
             expressionsBesoin = JSON.parse(besoinsStored); 
             if(!Array.isArray(expressionsBesoin)) expressionsBesoin = []; 
         }
         
+        // Demandes
         const demandesStored = localStorage.getItem('hsjda_demandes_v1');
         if (demandesStored) { 
             demandes = JSON.parse(demandesStored); 
             if(!Array.isArray(demandes)) demandes = []; 
         }
 
+        // Configuration email
         const emailConfig = localStorage.getItem('hsjda_email_config');
         if (emailConfig) {
             const config = JSON.parse(emailConfig);
@@ -1849,12 +2153,27 @@
             document.getElementById('backupFrequency').value = backupFrequency;
         }
 
+        // Configuration visiteur
+        const visitorConfigStored = localStorage.getItem('hsjda_visitor_config');
+        if (visitorConfigStored) {
+            configVisiteur = JSON.parse(visitorConfigStored);
+            document.getElementById('visitorInventaire').checked = configVisiteur.inventaire;
+            document.getElementById('visitorJournal').checked = configVisiteur.journal;
+            document.getElementById('visitorBesoins').checked = configVisiteur.besoins;
+            document.getElementById('visitorMaintenance').checked = configVisiteur.maintenance;
+            document.getElementById('visitorDemande').checked = configVisiteur.demande;
+            document.getElementById('visitorRebut').checked = configVisiteur.rebut;
+            document.getElementById('visitorPlanning').checked = configVisiteur.planning;
+        }
+
+        // Logo
         const savedLogo = localStorage.getItem('hsjda_logo');
         if (savedLogo) {
             document.getElementById('loginLogo').innerHTML = `<img src="${savedLogo}" style="width:100px; height:100px; border-radius:50%; object-fit:cover;">`;
             document.getElementById('appLogo').innerHTML = `<img src="${savedLogo}" style="width:60px; height:60px; border-radius:18px; object-fit:cover;">`;
         }
         
+        // Fond de connexion
         const bgColor1 = localStorage.getItem('hsjda_bg_color1');
         const bgColor2 = localStorage.getItem('hsjda_bg_color2');
         const bgImage = localStorage.getItem('hsjda_bg_image');
@@ -1865,6 +2184,7 @@
             document.getElementById('loginOverlay').style.background = `linear-gradient(145deg, ${bgColor1}, ${bgColor2})`;
         }
         
+        // Fond application
         const appBg = localStorage.getItem('hsjda_app_bg');
         if (appBg) {
             document.body.style.backgroundColor = appBg;
@@ -1876,6 +2196,35 @@
         console.warn("erreur chargement", e); 
     }
 
+    // Fonctions pour la configuration visiteur
+    window.sauvegarderConfigVisiteur = function() {
+        configVisiteur = {
+            inventaire: document.getElementById('visitorInventaire').checked,
+            journal: document.getElementById('visitorJournal').checked,
+            besoins: document.getElementById('visitorBesoins').checked,
+            maintenance: document.getElementById('visitorMaintenance').checked,
+            demande: document.getElementById('visitorDemande').checked,
+            rebut: document.getElementById('visitorRebut').checked,
+            planning: document.getElementById('visitorPlanning').checked
+        };
+        localStorage.setItem('hsjda_visitor_config', JSON.stringify(configVisiteur));
+        showNotification('Configuration visiteur sauvegardée');
+        if (currentMode === 'visitor') {
+            configurerMenuParMode();
+        }
+    };
+
+    window.selectionnerToutVisiteur = function(etat) {
+        document.getElementById('visitorInventaire').checked = etat;
+        document.getElementById('visitorJournal').checked = etat;
+        document.getElementById('visitorBesoins').checked = etat;
+        document.getElementById('visitorMaintenance').checked = etat;
+        document.getElementById('visitorDemande').checked = etat;
+        document.getElementById('visitorRebut').checked = etat;
+        document.getElementById('visitorPlanning').checked = etat;
+    };
+
+    // Notification
     function showNotification(message, type = 'success') {
         const notif = document.getElementById('notification');
         notif.textContent = message;
@@ -1884,6 +2233,7 @@
         setTimeout(() => { notif.style.display = 'none'; }, 3000);
     }
 
+    // Déconnexion
     window.deconnexion = function() {
         if (confirm("Êtes-vous sûr de vouloir vous déconnecter ?")) {
             ajouterLog(getCurrentUserName(), currentMode, 'Déconnexion');
@@ -1909,7 +2259,9 @@
         }
     }
 
+    // Ajouter un log de connexion
     function ajouterLog(utilisateur, type, action) {
+        if (!estAdminPrincipal) return; // Seul l'admin principal peut voir les logs
         const log = {
             date: new Date().toLocaleString(),
             utilisateur: utilisateur,
@@ -1922,7 +2274,9 @@
         afficherLogs();
     }
 
+    // Afficher les logs
     function afficherLogs() {
+        if (!estAdminPrincipal) return;
         const tbody = document.getElementById('logsTableBody');
         if (!tbody) return;
         
@@ -1939,8 +2293,12 @@
         });
     }
 
+    // Effacer les logs
     window.effacerLogs = function() {
-        if (currentMode !== 'admin') return;
+        if (!estAdminPrincipal) {
+            alert("Seul l'administrateur principal peut effacer les logs");
+            return;
+        }
         if (confirm("Effacer tous les logs de connexion ?")) {
             logsConnexion = [];
             localStorage.setItem('hsjda_logs', JSON.stringify(logsConnexion));
@@ -1949,6 +2307,7 @@
         }
     };
 
+    // Retour au mode admin
     window.retourModeAdmin = function() {
         if (estAdmin) {
             currentMode = 'admin';
@@ -1959,8 +2318,12 @@
         }
     };
 
+    // Changer le mode (admin principal uniquement)
     window.changerMode = function(mode) {
-        if (!estAdmin) return;
+        if (!estAdminPrincipal) {
+            alert("Seul l'administrateur principal peut changer de mode");
+            return;
+        }
         
         switch(mode) {
             case 'admin':
@@ -1986,6 +2349,7 @@
         connecter();
     };
 
+    // Changer son propre mot de passe
     window.changerMonMotDePasse = function() {
         const currentPass = document.getElementById('currentPassword').value;
         const newPass = document.getElementById('newPassword').value;
@@ -2015,7 +2379,7 @@
                     admin.code = newPass;
                     localStorage.setItem('hsjda_administrateurs', JSON.stringify(administrateurs));
                     userFound = true;
-                    ajouterLog(admin.nom, 'Admin', 'Changement de mot de passe');
+                    if (estAdminPrincipal) ajouterLog(admin.nom, 'Admin', 'Changement de mot de passe');
                 }
                 break;
                 
@@ -2027,7 +2391,6 @@
                         techniciens[techIndex].code = newPass;
                         localStorage.setItem('hsjda_techniciens', JSON.stringify(techniciens));
                         userFound = true;
-                        ajouterLog(currentTechInfo.nom, 'Technicien', 'Changement de mot de passe');
                     }
                 }
                 break;
@@ -2040,7 +2403,6 @@
                         services[servIndex].code = newPass;
                         localStorage.setItem('hsjda_services', JSON.stringify(services));
                         userFound = true;
-                        ajouterLog(currentServiceInfo.nom, 'Service', 'Changement de mot de passe');
                     }
                 }
                 break;
@@ -2051,7 +2413,6 @@
                     visiteurs[index] = newPass;
                     localStorage.setItem('hsjda_visitors', JSON.stringify(visiteurs));
                     userFound = true;
-                    ajouterLog('Visiteur', 'Visiteur', 'Changement de mot de passe');
                 }
                 break;
         }
@@ -2066,6 +2427,7 @@
         }
     };
 
+    // Fonction retour
     window.retourArriere = function() {
         if (historiquePages.length > 0) {
             const pagePrecedente = historiquePages.pop();
@@ -2075,7 +2437,13 @@
         }
     };
 
+    // Configuration email de sauvegarde
     window.configurerEmailSauvegarde = function() {
+        if (!estAdminPrincipal) {
+            alert("Seul l'administrateur principal peut configurer les emails");
+            return;
+        }
+        
         const email = document.getElementById('backupEmail').value.trim();
         const frequency = document.getElementById('backupFrequency').value.trim();
         
@@ -2099,7 +2467,13 @@
         demarrerSynchronisationAutomatique();
     };
 
+    // Envoyer sauvegarde par email
     window.envoyerSauvegardeEmail = function() {
+        if (!estAdminPrincipal) {
+            alert("Seul l'administrateur principal peut envoyer des emails");
+            return;
+        }
+        
         if (!backupEmail) {
             alert("Veuillez d'abord configurer votre email");
             return;
@@ -2116,6 +2490,7 @@
             expressionsBesoin,
             demandes,
             logsConnexion,
+            configVisiteur,
             date: new Date().toISOString(), 
             version: '7.0' 
         };
@@ -2131,7 +2506,7 @@
             filename: fileName
         };
         
-        emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', templateParams)
+        emailjs.send('service_lb9kf43', 'template_a1xwano', templateParams)
             .then(function(response) {
                 lastBackupTime = new Date().toISOString();
                 const config = {
@@ -2148,20 +2523,22 @@
             });
     };
 
+    // Démarrer la synchronisation automatique
     function demarrerSynchronisationAutomatique() {
         if (syncInterval) {
             clearInterval(syncInterval);
         }
         
-        if (backupEmail && backupFrequency > 0) {
+        if (backupEmail && backupFrequency > 0 && estAdminPrincipal) {
             syncInterval = setInterval(() => {
                 verifierEtSynchroniser();
             }, backupFrequency * 60 * 60 * 1000);
         }
     }
 
+    // Vérifier et synchroniser
     function verifierEtSynchroniser() {
-        if (!backupEmail) return;
+        if (!backupEmail || !estAdminPrincipal) return;
         
         const now = new Date();
         const lastBackup = lastBackupTime ? new Date(lastBackupTime) : null;
@@ -2178,6 +2555,7 @@
         }
     }
 
+    // Mise à jour du statut de synchronisation
     function updateSyncStatus() {
         const syncMessage = document.getElementById('syncMessage');
         const lastSyncEl = document.getElementById('lastSync');
@@ -2194,10 +2572,16 @@
         }
     }
 
+    // Synchronisation manuelle en ligne
     window.synchroniserEnLigne = function() {
+        if (!estAdminPrincipal) {
+            alert("Seul l'administrateur principal peut synchroniser");
+            return;
+        }
         envoyerSauvegardeEmail();
     };
 
+    // Gestion du menu selon le mode
     function configurerMenuParMode() {
         const menuInv = document.getElementById('menuInventaire');
         const menuJour = document.getElementById('menuJournal');
@@ -2234,8 +2618,8 @@
                 journalForm.style.display = 'grid';
                 besoinForm.style.display = 'grid';
                 adminSection.style.display = 'block';
-                adminControls.style.display = 'block';
-                modeSwitchPanel.style.display = 'flex';
+                adminControls.style.display = estAdminPrincipal ? 'block' : 'none';
+                modeSwitchPanel.style.display = estAdminPrincipal ? 'flex' : 'none';
                 adminReturnSection.style.display = 'none';
                 serviceFilter.style.display = 'none';
                 passwordSection.style.display = 'block';
@@ -2250,14 +2634,14 @@
                 break;
                 
             case 'technicien':
-                menuInv.disabled = true;
-                menuBes.disabled = false; // Le technicien peut faire des expressions de besoin
+                menuInv.disabled = false; // Technicien peut voir inventaire
+                menuBes.disabled = false;
                 menuDem.disabled = true;
                 menuRebut.disabled = true;
                 menuPlanning.disabled = false;
                 formContainer.style.display = 'none';
-                journalForm.style.display = 'grid'; // Le technicien peut ajouter des interventions
-                besoinForm.style.display = 'grid'; // Le technicien peut ajouter des besoins
+                journalForm.style.display = 'grid';
+                besoinForm.style.display = 'grid';
                 adminSection.style.display = 'none';
                 adminControls.style.display = 'none';
                 modeSwitchPanel.style.display = 'none';
@@ -2273,6 +2657,7 @@
                 break;
                 
             case 'service':
+                menuInv.disabled = false;
                 menuJour.disabled = true;
                 menuBes.disabled = true;
                 menuMain.disabled = true;
@@ -2302,12 +2687,15 @@
                 break;
                 
             case 'visitor':
-                menuJour.disabled = true;
-                menuBes.disabled = true;
-                menuMain.disabled = true;
-                menuDem.disabled = true;
-                menuRebut.disabled = true;
-                menuPlanning.disabled = true;
+                // Configuration visiteur (lecture seule selon config)
+                menuInv.disabled = !configVisiteur.inventaire;
+                menuJour.disabled = !configVisiteur.journal;
+                menuBes.disabled = !configVisiteur.besoins;
+                menuMain.disabled = !configVisiteur.maintenance;
+                menuDem.disabled = !configVisiteur.demande;
+                menuRebut.disabled = !configVisiteur.rebut;
+                menuPlanning.disabled = !configVisiteur.planning;
+                
                 formContainer.style.display = 'none';
                 journalForm.style.display = 'none';
                 besoinForm.style.display = 'none';
@@ -2323,6 +2711,7 @@
         }
     }
 
+    // Remplir le filtre des services
     function remplirFiltreServices() {
         const select = document.getElementById('serviceFilter');
         select.innerHTML = '<option value="">-- Tous les services --</option>';
@@ -2335,8 +2724,9 @@
         afficher();
     };
 
+    // Créer un administrateur (seulement pour l'admin principal)
     window.creerAdminFromPanel = function() {
-        if (currentMode !== 'admin' || !estAdminPrincipal) {
+        if (!estAdminPrincipal) {
             alert("Seul l'administrateur principal peut ajouter des administrateurs");
             return;
         }
@@ -2370,8 +2760,9 @@
         showNotification('Administrateur ajouté');
     };
 
+    // Supprimer un administrateur (seulement pour l'admin principal)
     window.supprimerAdmin = function(code) {
-        if (currentMode !== 'admin' || !estAdminPrincipal) {
+        if (!estAdminPrincipal) {
             alert("Seul l'administrateur principal peut supprimer des administrateurs");
             return;
         }
@@ -2406,6 +2797,7 @@
         }).join('');
     }
 
+    // Fonctions pour la gestion des rebuts
     window.ouvrirModalRebut = function(index) {
         if (currentMode !== 'admin') return;
         
@@ -2525,6 +2917,7 @@
         }
     };
 
+    // Afficher les rebuts
     function afficherRebut() {
         const tbody = document.getElementById('rebutTableBody');
         if (!tbody) return;
@@ -2666,6 +3059,7 @@
         doc.save("Registre_Rebut_HSJDA.pdf");
     };
 
+    // Statistiques du plan de maintenance
     function calculerStatistiquesMaintenance() {
         const totalPlanifie = equipements.filter(e => e.datePrev).length;
         const interventionsParEquipement = {};
@@ -2727,7 +3121,7 @@
                     <td>${eq.service}</td>
                     <td class="date-small">${eq.datePrev}</td>
                     <td><span class="statut-badge ${realisee ? 'statut-realise' : diffDays < 0 ? 'urgence-haute' : 'statut-attente'}">${realisee ? 'Réalisé' : diffDays < 0 ? 'En retard' : 'Planifié'}</span></td>
-                    <td class="date-small">${realisee ? 'Voir journal' : '-'}</td>
+                    <td class="date-small">${realisee ? interventionsParEquipement[eq.nom]?.find(interv => new Date(interv.dateDebut) >= new Date(eq.datePrev))?.dateDebut?.split('T')[0] || '-' : '-'}</td>
                     <td>${realisee ? interventionsParEquipement[eq.nom]?.find(interv => new Date(interv.dateDebut) >= new Date(eq.datePrev))?.technicien || '-' : '-'}</td>
                     <td><span class="${diffDays < 0 ? 'alert-urgent' : diffDays <= 7 ? 'alert-proche' : 'alert-normal'}">${diffDays < 0 ? Math.abs(diffDays) + ' jours' : diffDays + ' jours'}</span></td>
                 `;
@@ -2843,7 +3237,7 @@
                 adminPrivilegesText.textContent = 'Vous avez tous les droits, y compris l\'ajout d\'autres administrateurs.';
             } else if (estAdmin) {
                 adminStatusText.textContent = 'Vous êtes connecté en tant qu\'Administrateur Secondaire';
-                adminPrivilegesText.textContent = 'Vous avez accès à toutes les fonctionnalités sauf la gestion des administrateurs.';
+                adminPrivilegesText.textContent = 'Vous avez accès limité (sans gestion des admins, logs, personnalisation).';
             }
         }
 
@@ -2868,7 +3262,7 @@
         afficherRebut();
         calculerStatistiquesMaintenance();
         
-        if (currentMode === 'admin') {
+        if (estAdminPrincipal) {
             afficherListeAdmins();
             afficherListeVisiteursEtTechs();
             afficherLogs();
@@ -2941,8 +3335,9 @@
         }
     };
 
+    // Gestion des visiteurs, techniciens, services
     window.ajouterVisiteur = function() {
-        if (currentMode !== 'admin') return;
+        if (!estAdminPrincipal) return;
         const newCode = document.getElementById('newVisitorCode').value.trim();
         if (!newCode) return alert("Entrez un code");
         if (visiteurs.includes(newCode)) return alert("Existe déjà");
@@ -2955,7 +3350,7 @@
     };
 
     window.ajouterTechnicien = function() {
-        if (currentMode !== 'admin') return;
+        if (!estAdminPrincipal) return;
         const code = document.getElementById('newTechCode').value.trim();
         const nom = document.getElementById('newTechName').value.trim();
         if (!code || !nom) return alert("Code et nom requis");
@@ -2970,7 +3365,7 @@
     };
 
     window.ajouterService = function() {
-        if (currentMode !== 'admin') return;
+        if (!estAdminPrincipal) return;
         const code = document.getElementById('newServiceCode').value.trim();
         const nom = document.getElementById('newServiceName').value.trim();
         if (!code || !nom) return alert("Code et nom requis");
@@ -2985,7 +3380,7 @@
     };
 
     window.supprimerVisiteur = function(code) {
-        if (currentMode !== 'admin') return;
+        if (!estAdminPrincipal) return;
         if (confirm(`Supprimer ${code} ?`)) { 
             visiteurs = visiteurs.filter(v => v !== code); 
             localStorage.setItem('hsjda_visitors', JSON.stringify(visiteurs)); 
@@ -2996,7 +3391,7 @@
     };
 
     window.supprimerTechnicien = function(code) {
-        if (currentMode !== 'admin') return;
+        if (!estAdminPrincipal) return;
         if (confirm(`Supprimer le technicien ?`)) { 
             const tech = techniciens.find(t => t.code === code);
             techniciens = techniciens.filter(t => t.code !== code); 
@@ -3008,7 +3403,7 @@
     };
 
     window.supprimerService = function(code) {
-        if (currentMode !== 'admin') return;
+        if (!estAdminPrincipal) return;
         if (confirm(`Supprimer le service ?`)) { 
             const serv = services.find(s => s.code === code);
             services = services.filter(s => s.code !== code); 
@@ -3051,7 +3446,9 @@
         }
     }
 
+    // Personnalisation
     window.changerFondConnexion = function() {
+        if (!estAdminPrincipal) return;
         const color1 = document.getElementById('bgColor1').value;
         const color2 = document.getElementById('bgColor2').value;
         
@@ -3063,6 +3460,7 @@
     };
 
     window.changerFondImage = function(event) {
+        if (!estAdminPrincipal) return;
         const file = event.target.files[0];
         if (file) {
             const reader = new FileReader();
@@ -3078,6 +3476,7 @@
     };
 
     window.reinitialiserFond = function() {
+        if (!estAdminPrincipal) return;
         localStorage.removeItem('hsjda_bg_color1');
         localStorage.removeItem('hsjda_bg_color2');
         localStorage.removeItem('hsjda_bg_image');
@@ -3087,13 +3486,14 @@
     };
 
     window.changerFondApp = function() {
+        if (!estAdminPrincipal) return;
         const color = document.getElementById('appBgColor').value;
         localStorage.setItem('hsjda_app_bg', color);
         document.body.style.backgroundColor = color;
     };
 
     window.changerLogoAdmin = function(event) {
-        if (currentMode !== 'admin') return;
+        if (!estAdminPrincipal) return;
         const file = event.target.files[0];
         if (file) {
             const reader = new FileReader();
@@ -3109,7 +3509,7 @@
     };
 
     window.changerLogoApp = function(event) {
-        if (currentMode !== 'admin') return;
+        if (!estAdminPrincipal) return;
         const file = event.target.files[0];
         if (file) {
             const reader = new FileReader();
@@ -3123,6 +3523,7 @@
         }
     };
 
+    // Fonctions existantes pour les équipements, journal, etc.
     function genererMatricule(service, nom) { 
         const annee = new Date().getFullYear(); 
         const prefixe = service.trim().toUpperCase().substring(0,6).replace(/\s/g,''); 
@@ -3280,7 +3681,7 @@
         
         equipementsAffiches.forEach((eq, idx) => {
             const etatClass = eq.etat === 'Fonctionnel' ? 'etat-badge' : 'etat-badge panne';
-            const peutModifier = currentMode === 'admin';
+            const peutModifier = currentMode === 'admin' || currentMode === 'technicien';
             const alerteClass = getAlerteClass(eq.datePrev);
             const alerteText = getAlerteText(eq.datePrev);
             
@@ -3303,8 +3704,9 @@
                         ${peutModifier ? `
                             <button class="btn-etat ${eq.etat === 'Fonctionnel' ? '' : 'panne'}" onclick="changerEtat(${realIndex})">🔄</button>
                             <button class="btn-modifier" onclick="modifierAppareil(${realIndex})">✏️</button>
-                            <button class="btn-rebut" onclick="ouvrirModalRebut(${realIndex})" title="Mettre au rebut">🗑️ Mettre au rebut</button>
+                            ${currentMode === 'admin' ? `<button class="btn-rebut" onclick="ouvrirModalRebut(${realIndex})" title="Mettre au rebut">🗑️ Mettre au rebut</button>` : ''}
                         ` : ''}
+                        ${currentMode === 'visitor' && configVisiteur.inventaire ? '👁️ Lecture seule' : ''}
                     </div>
                 </td>`;
             tbody.appendChild(ligne);
@@ -3312,7 +3714,7 @@
     };
 
     window.ajouterIntervention = function() {
-        if (currentMode === 'visitor') return;
+        if (currentMode === 'visitor' || currentMode === 'service') return;
         const tech = document.getElementById('techNom').value.trim();
         const service = document.getElementById('serviceInterv').value;
         const equip = document.getElementById('equipInterv').value.trim();
@@ -3336,10 +3738,8 @@
         localStorage.setItem('hsjda_journal_v1', JSON.stringify(interventions));
         afficherJournal();
         
-        if (currentMode === 'admin') {
+        if (estAdminPrincipal) {
             ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Ajout intervention par ${tech}`);
-        } else if (currentMode === 'technicien') {
-            ajouterLog(currentTechInfo?.nom || 'Technicien', 'Technicien', `Ajout intervention`);
         }
         
         showNotification('Intervention ajoutée');
@@ -3366,7 +3766,7 @@
         interventions = interventions.filter(i => i.id != id);
         localStorage.setItem('hsjda_journal_v1', JSON.stringify(interventions));
         afficherJournal();
-        ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', 'Suppression intervention');
+        if (estAdminPrincipal) ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', 'Suppression intervention');
         showNotification('Intervention supprimée');
         calculerStatistiquesMaintenance();
     };
@@ -3411,7 +3811,7 @@
     }
 
     window.ajouterBesoin = function() {
-        if (currentMode === 'visitor') return;
+        if (currentMode === 'visitor' || currentMode === 'service') return;
         
         const dateEmission = document.getElementById('dateEmission').value;
         const designation = document.getElementById('designationBesoin').value.trim();
@@ -3437,10 +3837,8 @@
         expressionsBesoin.unshift(besoin);
         localStorage.setItem('hsjda_besoins_v1', JSON.stringify(expressionsBesoin));
         
-        if (currentMode === 'admin') {
+        if (estAdminPrincipal) {
             ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Ajout besoin: ${designation}`);
-        } else if (currentMode === 'technicien') {
-            ajouterLog(currentTechInfo?.nom || 'Technicien', 'Technicien', `Ajout besoin`);
         }
         
         showNotification('Besoin ajouté');
@@ -3461,7 +3859,7 @@
         expressionsBesoin = expressionsBesoin.filter(b => b.id != id);
         localStorage.setItem('hsjda_besoins_v1', JSON.stringify(expressionsBesoin));
         afficherBesoins();
-        ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', 'Suppression besoin');
+        if (estAdminPrincipal) ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', 'Suppression besoin');
         showNotification('Besoin supprimé');
     };
 
@@ -3472,8 +3870,6 @@
             besoin.statut = nouveauStatut;
             localStorage.setItem('hsjda_besoins_v1', JSON.stringify(expressionsBesoin));
             afficherBesoins();
-            ajouterLog(currentMode === 'admin' ? currentAdminInfo?.nom : currentTechInfo?.nom, 
-                      currentMode, `Modification statut besoin: ${nouveauStatut}`);
             showNotification('Statut modifié');
         }
     };
@@ -3496,7 +3892,7 @@
             if (besoin.statut === 'En cours') statutClass = 'statut-encours';
             else if (besoin.statut === 'Réalisé') statutClass = 'statut-realise';
 
-            const peutModifier = currentMode !== 'visitor';
+            const peutModifier = currentMode !== 'visitor' && currentMode !== 'service';
             
             const ligne = document.createElement('tr');
             ligne.innerHTML = `
@@ -3514,6 +3910,7 @@
                             <button class="btn-etat" onclick="modifierStatutBesoin(${besoin.id}, 'En attente')">⏸️</button>
                             ${currentMode === 'admin' ? `<button class="btn-danger" onclick="supprimerBesoin(${besoin.id})">🗑️</button>` : ''}
                         ` : ''}
+                        ${currentMode === 'visitor' && configVisiteur.besoins ? '👁️ Lecture seule' : ''}
                     </div>
                 </td>
             `;
@@ -3605,7 +4002,7 @@
     }
 
     window.soumettreDemande = function() {
-        if (currentMode !== 'service' && !estAdmin) {
+        if (currentMode !== 'service' && currentMode !== 'admin') {
             alert("Veuillez d'abord vous connecter avec votre code service");
             return;
         }
@@ -3639,7 +4036,7 @@
         demandes.unshift(demande);
         localStorage.setItem('hsjda_demandes_v1', JSON.stringify(demandes));
         
-        ajouterLog(currentServiceInfo?.nom || 'Service', 'Service', `Nouvelle demande: ${equipement}`);
+        if (estAdminPrincipal) ajouterLog(currentServiceInfo?.nom || 'Service', 'Service', `Nouvelle demande: ${equipement}`);
         showNotification('Demande envoyée avec succès !');
         
         document.getElementById('demandeService').value = currentServiceInfo?.nom || '';
@@ -3683,6 +4080,7 @@
                     ${peutModifier ? `
                         <button class="btn-success btn-small" onclick="modifierStatutDemande(${demande.id}, 'Traitée')">✅ Traiter</button>
                     ` : ''}
+                    ${currentMode === 'visitor' && configVisiteur.demande ? '👁️ Lecture seule' : ''}
                 </td>
             `;
             tbody.appendChild(ligne);
@@ -3700,7 +4098,12 @@
         }
     };
 
+    // Sauvegarde et restauration
     window.sauvegarderDonnees = function() {
+        if (!estAdminPrincipal) {
+            alert("Seul l'administrateur principal peut sauvegarder");
+            return;
+        }
         const data = { 
             administrateurs,
             equipements, 
@@ -3712,6 +4115,7 @@
             expressionsBesoin,
             demandes,
             logsConnexion,
+            configVisiteur,
             date: new Date().toISOString(), 
             version: '7.0' 
         };
@@ -3727,10 +4131,15 @@
     };
 
     window.restaurerDonnees = function() { 
+        if (!estAdminPrincipal) {
+            alert("Seul l'administrateur principal peut restaurer");
+            return;
+        }
         document.getElementById('restoreFile').click(); 
     };
 
     window.importerDonnees = function(event) {
+        if (!estAdminPrincipal) return;
         const file = event.target.files[0]; 
         if (!file) return;
         const reader = new FileReader();
@@ -3778,8 +4187,12 @@
                     logsConnexion = data.logsConnexion;
                     localStorage.setItem('hsjda_logs', JSON.stringify(logsConnexion));
                 }
+                if (data.configVisiteur) {
+                    configVisiteur = data.configVisiteur;
+                    localStorage.setItem('hsjda_visitor_config', JSON.stringify(configVisiteur));
+                }
                 
-                if (currentMode === 'admin') {
+                if (estAdminPrincipal) {
                     afficherListeAdmins();
                     afficherListeVisiteursEtTechs();
                     afficherLogs();
@@ -3802,6 +4215,7 @@
         event.target.value = '';
     };
 
+    // Export PDF journal
     window.exporterJournalPDF = function() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
