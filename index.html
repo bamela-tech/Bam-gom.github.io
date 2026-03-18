@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
     <title>HSJDA | Gestion Maintenance Hospitalière</title>
-    <!-- jsPDF & EmailJS pour l'envoi d'email -->
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <!-- jsPDF & EmailJS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
@@ -1319,7 +1322,8 @@
 
     <!-- Statut de synchronisation -->
     <div id="syncStatus" class="sync-status">
-        <span id="syncMessage">Application indépendante - Données locales</span>
+        <span id="syncMessage">🔄 Synchronisation en temps réel active</span>
+        <span id="syncBadge" style="background:#27ae60; color:white; padding:2px 10px; border-radius:20px; margin-left:10px;">Connecté</span>
         <span id="lastSync"></span>
     </div>
 
@@ -1354,7 +1358,8 @@
         <button class="menu-btn" onclick="changerRubrique('rebut')" id="menuRebut">🗑️ Mis au rebut</button>
         <button class="menu-btn" onclick="changerRubrique('planning')" id="menuPlanning">📊 Planning Maintenance</button>
     </div>
-        <!-- PAGE INVENTAIRE -->
+
+    <!-- PAGE INVENTAIRE -->
     <div id="pageInventaire" class="page active">
         <input type="text" id="searchInput" class="search-box" placeholder="🔍 Rechercher (matricule, nom, service...)" onkeyup="filtrer()">
 
@@ -1998,17 +2003,40 @@
         <button class="btn-logout" onclick="deconnexion()">🚪 Déconnexion</button>
     </div>
 </div>
+
 <script>
-(function() {
-    // Données
+    // CONFIGURATION FIREBASE - Vos identifiants
+    const firebaseConfig = {
+        apiKey: "AIzaSyCOC4pD9mqMPbe9m23YFywcL3ixaUzYufw",
+        authDomain: "hsjda-app.firebaseapp.com",
+        projectId: "hsjda-app",
+        storageBucket: "hsjda-app.firebasestorage.app",
+        messagingSenderId: "617376831655",
+        appId: "1:617376831655:web:21a6d15631d67bc3b52382",
+        measurementId: "G-HHX8JSQJTQ"
+    };
+
+    // Initialisation Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Variables globales
     let administrateurs = [];
     let adminPrincipal = null;
-    let CODE_ADMIN = "HSJDA2026";
     let equipements = [];
     let equipementsRebut = [];
-    let visiteurs = [];
-    let techniciens = [];
-    let services = [];
+    let visiteurs = ['VISITEUR2026', 'VISITEUR2025'];
+    let techniciens = [
+        {code:"JEAN123", nom:"Jean KOFFI"},
+        {code:"MARIE456", nom:"Marie AHO"},
+        {code:"PAUL789", nom:"Paul KOUASSI"}
+    ];
+    let services = [
+        {code:"SERV001", nom:"Maternité"},
+        {code:"SERV002", nom:"Laboratoire"},
+        {code:"SERV003", nom:"Radiologie"},
+        {code:"SERV004", nom:"Bloc opératoire"}
+    ];
     let interventions = [];
     let expressionsBesoin = [];
     let demandes = [];
@@ -2026,6 +2054,7 @@
     let syncInterval = null;
     let estAdmin = false;
     let estAdminPrincipal = false;
+    let syncInProgress = false;
     
     let equipementEnCoursDeRebut = null;
     
@@ -2040,161 +2069,139 @@
         planning: false
     };
 
-    // Initialisation EmailJS - avec vos identifiants
+    // Initialisation EmailJS
     emailjs.init("Gg0-z4pm0nEr66hAX");
 
-    // Chargement initial
-    try {
-        // Administrateurs
-        const adminsStored = localStorage.getItem('hsjda_administrateurs');
-        if (adminsStored) {
-            administrateurs = JSON.parse(adminsStored);
-            if (administrateurs.length > 0) {
+    // Chargement depuis Firebase
+    async function chargerDonneesFirebase() {
+        try {
+            // Charger administrateurs
+            const adminsDoc = await db.collection('data').doc('administrateurs').get();
+            if (adminsDoc.exists) {
+                administrateurs = adminsDoc.data().valeurs || [];
                 adminPrincipal = administrateurs[0];
+            } else {
+                administrateurs = [{nom: "Admin Principal", code: "HSJDA2026"}];
+                adminPrincipal = administrateurs[0];
+                await db.collection('data').doc('administrateurs').set({valeurs: administrateurs});
             }
-        } else {
-            administrateurs = [{nom: "Admin Principal", code: "HSJDA2026"}];
-            adminPrincipal = administrateurs[0];
-            localStorage.setItem('hsjda_administrateurs', JSON.stringify(administrateurs));
+            
+            // Charger équipements
+            const equipDoc = await db.collection('data').doc('equipements').get();
+            if (equipDoc.exists) {
+                equipements = equipDoc.data().valeurs || [];
+            }
+            
+            // Charger rebuts
+            const rebutDoc = await db.collection('data').doc('equipementsRebut').get();
+            if (rebutDoc.exists) {
+                equipementsRebut = rebutDoc.data().valeurs || [];
+            }
+            
+            // Charger interventions
+            const intervDoc = await db.collection('data').doc('interventions').get();
+            if (intervDoc.exists) {
+                interventions = intervDoc.data().valeurs || [];
+            }
+            
+            // Charger besoins
+            const besoinsDoc = await db.collection('data').doc('expressionsBesoin').get();
+            if (besoinsDoc.exists) {
+                expressionsBesoin = besoinsDoc.data().valeurs || [];
+            }
+            
+            // Charger demandes
+            const demandesDoc = await db.collection('data').doc('demandes').get();
+            if (demandesDoc.exists) {
+                demandes = demandesDoc.data().valeurs || [];
+            }
+            
+            // Charger visiteurs
+            const visDoc = await db.collection('data').doc('visiteurs').get();
+            if (visDoc.exists) {
+                visiteurs = visDoc.data().valeurs || ['VISITEUR2026','VISITEUR2025'];
+            }
+            
+            // Charger techniciens
+            const techDoc = await db.collection('data').doc('techniciens').get();
+            if (techDoc.exists) {
+                techniciens = techDoc.data().valeurs || [];
+            }
+            
+            // Charger services
+            const servDoc = await db.collection('data').doc('services').get();
+            if (servDoc.exists) {
+                services = servDoc.data().valeurs || [];
+            }
+            
+            // Charger logs
+            const logsDoc = await db.collection('data').doc('logsConnexion').get();
+            if (logsDoc.exists) {
+                logsConnexion = logsDoc.data().valeurs || [];
+            }
+            
+            // Charger config visiteur
+            const configDoc = await db.collection('data').doc('configVisiteur').get();
+            if (configDoc.exists) {
+                configVisiteur = configDoc.data().valeurs || configVisiteur;
+            }
+            
+            updateSyncStatus('connected', 'Données synchronisées');
+            
+        } catch (error) {
+            console.error("Erreur chargement Firebase:", error);
+            updateSyncStatus('offline', 'Erreur de synchronisation');
         }
-        
-        if (administrateurs.length > 0) {
-            CODE_ADMIN = administrateurs[0].code;
-        }
-        
-        // Logs de connexion
-        const logsStored = localStorage.getItem('hsjda_logs');
-        if (logsStored) {
-            logsConnexion = JSON.parse(logsStored);
-        }
-        
-        // Équipements
-        const storedEq = localStorage.getItem('hsjda_pro_data_v4');
-        if (storedEq) { 
-            equipements = JSON.parse(storedEq); 
-            if(!Array.isArray(equipements)) equipements = []; 
-        }
-        
-        // Équipements rebutés
-        const rebutStored = localStorage.getItem('hsjda_rebut_v1');
-        if (rebutStored) {
-            equipementsRebut = JSON.parse(rebutStored);
-            if(!Array.isArray(equipementsRebut)) equipementsRebut = [];
-        }
-        
-        // Visiteurs
-        const visitorsStored = localStorage.getItem('hsjda_visitors');
-        if (visitorsStored) { 
-            visiteurs = JSON.parse(visitorsStored); 
-            if(!Array.isArray(visiteurs)) visiteurs = []; 
-        } else { 
-            visiteurs = ['VISITEUR2026','VISITEUR2025']; 
-            localStorage.setItem('hsjda_visitors', JSON.stringify(visiteurs)); 
-        }
-        
-        // Techniciens
-        const techStored = localStorage.getItem('hsjda_techniciens');
-        if (techStored) { 
-            techniciens = JSON.parse(techStored); 
-            if(!Array.isArray(techniciens)) techniciens = []; 
-        } else { 
-            techniciens = [
-                {code:"JEAN123", nom:"Jean KOFFI"},
-                {code:"MARIE456", nom:"Marie AHO"},
-                {code:"PAUL789", nom:"Paul KOUASSI"}
-            ]; 
-            localStorage.setItem('hsjda_techniciens', JSON.stringify(techniciens)); 
-        }
-        
-        // Services
-        const servicesStored = localStorage.getItem('hsjda_services');
-        if (servicesStored) { 
-            services = JSON.parse(servicesStored); 
-            if(!Array.isArray(services)) services = []; 
-        } else { 
-            services = [
-                {code:"SERV001", nom:"Maternité"},
-                {code:"SERV002", nom:"Laboratoire"},
-                {code:"SERV003", nom:"Radiologie"},
-                {code:"SERV004", nom:"Bloc opératoire"}
-            ]; 
-            localStorage.setItem('hsjda_services', JSON.stringify(services)); 
-        }
-        
-        // Interventions
-        const intervStored = localStorage.getItem('hsjda_journal_v1');
-        if (intervStored) { 
-            interventions = JSON.parse(intervStored); 
-            if(!Array.isArray(interventions)) interventions = []; 
-        }
-        
-        // Besoins
-        const besoinsStored = localStorage.getItem('hsjda_besoins_v1');
-        if (besoinsStored) { 
-            expressionsBesoin = JSON.parse(besoinsStored); 
-            if(!Array.isArray(expressionsBesoin)) expressionsBesoin = []; 
-        }
-        
-        // Demandes
-        const demandesStored = localStorage.getItem('hsjda_demandes_v1');
-        if (demandesStored) { 
-            demandes = JSON.parse(demandesStored); 
-            if(!Array.isArray(demandes)) demandes = []; 
-        }
-
-        // Configuration email
-        const emailConfig = localStorage.getItem('hsjda_email_config');
-        if (emailConfig) {
-            const config = JSON.parse(emailConfig);
-            backupEmail = config.email;
-            backupFrequency = config.frequency;
-            lastBackupTime = config.lastBackup;
-            document.getElementById('backupEmail').value = backupEmail;
-            document.getElementById('backupFrequency').value = backupFrequency;
-        }
-
-        // Configuration visiteur
-        const visitorConfigStored = localStorage.getItem('hsjda_visitor_config');
-        if (visitorConfigStored) {
-            configVisiteur = JSON.parse(visitorConfigStored);
-            document.getElementById('visitorInventaire').checked = configVisiteur.inventaire;
-            document.getElementById('visitorJournal').checked = configVisiteur.journal;
-            document.getElementById('visitorBesoins').checked = configVisiteur.besoins;
-            document.getElementById('visitorMaintenance').checked = configVisiteur.maintenance;
-            document.getElementById('visitorDemande').checked = configVisiteur.demande;
-            document.getElementById('visitorRebut').checked = configVisiteur.rebut;
-            document.getElementById('visitorPlanning').checked = configVisiteur.planning;
-        }
-
-        // Logo
-        const savedLogo = localStorage.getItem('hsjda_logo');
-        if (savedLogo) {
-            document.getElementById('loginLogo').innerHTML = `<img src="${savedLogo}" style="width:100px; height:100px; border-radius:50%; object-fit:cover;">`;
-            document.getElementById('appLogo').innerHTML = `<img src="${savedLogo}" style="width:60px; height:60px; border-radius:18px; object-fit:cover;">`;
-        }
-        
-        // Fond de connexion
-        const bgColor1 = localStorage.getItem('hsjda_bg_color1');
-        const bgColor2 = localStorage.getItem('hsjda_bg_color2');
-        const bgImage = localStorage.getItem('hsjda_bg_image');
-        
-        if (bgImage) {
-            document.getElementById('loginOverlay').style.background = `url('${bgImage}') center/cover no-repeat`;
-        } else if (bgColor1 && bgColor2) {
-            document.getElementById('loginOverlay').style.background = `linear-gradient(145deg, ${bgColor1}, ${bgColor2})`;
-        }
-        
-        // Fond application
-        const appBg = localStorage.getItem('hsjda_app_bg');
-        if (appBg) {
-            document.body.style.backgroundColor = appBg;
-        }
-        
-        demarrerSynchronisationAutomatique();
-        
-    } catch(e) { 
-        console.warn("erreur chargement", e); 
     }
+
+    // Sauvegarde vers Firebase
+    async function sauvegarderDonneesFirebase(type, valeurs) {
+        if (syncInProgress) return;
+        
+        try {
+            syncInProgress = true;
+            await db.collection('data').doc(type).set({valeurs: valeurs});
+            syncInProgress = false;
+        } catch (error) {
+            console.error("Erreur sauvegarde Firebase:", error);
+            syncInProgress = false;
+        }
+    }
+
+    // Écouter les changements en temps réel
+    function ecouterChangements() {
+        db.collection('data').doc('equipements').onSnapshot((doc) => {
+            if (doc.exists && !syncInProgress) {
+                equipements = doc.data().valeurs || [];
+                afficher();
+            }
+        });
+        
+        db.collection('data').doc('interventions').onSnapshot((doc) => {
+            if (doc.exists && !syncInProgress) {
+                interventions = doc.data().valeurs || [];
+                afficherJournal();
+            }
+        });
+        
+        db.collection('data').doc('expressionsBesoin').onSnapshot((doc) => {
+            if (doc.exists && !syncInProgress) {
+                expressionsBesoin = doc.data().valeurs || [];
+                afficherBesoins();
+            }
+        });
+        
+        db.collection('data').doc('demandes').onSnapshot((doc) => {
+            if (doc.exists && !syncInProgress) {
+                demandes = doc.data().valeurs || [];
+                afficherDemandes();
+            }
+        });
+    }
+
+    // Initialisation
+    chargerDonneesFirebase();
+    ecouterChangements();
 
     // Fonctions pour la configuration visiteur
     window.sauvegarderConfigVisiteur = function() {
@@ -2207,7 +2214,7 @@
             rebut: document.getElementById('visitorRebut').checked,
             planning: document.getElementById('visitorPlanning').checked
         };
-        localStorage.setItem('hsjda_visitor_config', JSON.stringify(configVisiteur));
+        sauvegarderDonneesFirebase('configVisiteur', configVisiteur);
         showNotification('Configuration visiteur sauvegardée');
         if (currentMode === 'visitor') {
             configurerMenuParMode();
@@ -2224,6 +2231,27 @@
         document.getElementById('visitorPlanning').checked = etat;
     };
 
+    // Mise à jour du statut de synchronisation
+    function updateSyncStatus(status, message) {
+        const syncMessage = document.getElementById('syncMessage');
+        const syncBadge = document.getElementById('syncBadge');
+        
+        if (status === 'connected') {
+            syncMessage.innerHTML = '🔄 Synchronisation en temps réel active';
+            syncBadge.textContent = 'Connecté';
+            syncBadge.style.backgroundColor = '#27ae60';
+        } else if (status === 'syncing') {
+            syncMessage.innerHTML = '🔄 Synchronisation en cours...';
+            syncBadge.textContent = 'Synchro';
+            syncBadge.style.backgroundColor = '#f39c12';
+        } else if (status === 'offline') {
+            syncMessage.innerHTML = '⚠️ Mode hors ligne - Reconnection...';
+            syncBadge.textContent = 'Hors ligne';
+            syncBadge.style.backgroundColor = '#e74c3c';
+        }
+        if (message) showNotification(message);
+    }
+
     // Notification
     function showNotification(message, type = 'success') {
         const notif = document.getElementById('notification');
@@ -2236,7 +2264,6 @@
     // Déconnexion
     window.deconnexion = function() {
         if (confirm("Êtes-vous sûr de vouloir vous déconnecter ?")) {
-            ajouterLog(getCurrentUserName(), currentMode, 'Déconnexion');
             document.getElementById('loginOverlay').style.display = 'flex';
             document.getElementById('mainContent').style.display = 'none';
             document.getElementById('passInput').value = '';
@@ -2261,7 +2288,7 @@
 
     // Ajouter un log de connexion
     function ajouterLog(utilisateur, type, action) {
-        if (!estAdminPrincipal) return; // Seul l'admin principal peut voir les logs
+        if (!estAdminPrincipal) return;
         const log = {
             date: new Date().toLocaleString(),
             utilisateur: utilisateur,
@@ -2270,7 +2297,7 @@
         };
         logsConnexion.unshift(log);
         if (logsConnexion.length > 100) logsConnexion.pop();
-        localStorage.setItem('hsjda_logs', JSON.stringify(logsConnexion));
+        sauvegarderDonneesFirebase('logsConnexion', logsConnexion);
         afficherLogs();
     }
 
@@ -2294,14 +2321,14 @@
     }
 
     // Effacer les logs
-    window.effacerLogs = function() {
+    window.effacerLogs = async function() {
         if (!estAdminPrincipal) {
             alert("Seul l'administrateur principal peut effacer les logs");
             return;
         }
         if (confirm("Effacer tous les logs de connexion ?")) {
             logsConnexion = [];
-            localStorage.setItem('hsjda_logs', JSON.stringify(logsConnexion));
+            await sauvegarderDonneesFirebase('logsConnexion', logsConnexion);
             afficherLogs();
             showNotification('Logs effacés');
         }
@@ -2377,7 +2404,7 @@
                 const admin = administrateurs.find(a => a.code === currentPass);
                 if (admin) {
                     admin.code = newPass;
-                    localStorage.setItem('hsjda_administrateurs', JSON.stringify(administrateurs));
+                    sauvegarderDonneesFirebase('administrateurs', administrateurs);
                     userFound = true;
                     if (estAdminPrincipal) ajouterLog(admin.nom, 'Admin', 'Changement de mot de passe');
                 }
@@ -2389,7 +2416,7 @@
                     const techIndex = techniciens.findIndex(t => t.nom === currentTechInfo.nom);
                     if (techIndex !== -1) {
                         techniciens[techIndex].code = newPass;
-                        localStorage.setItem('hsjda_techniciens', JSON.stringify(techniciens));
+                        sauvegarderDonneesFirebase('techniciens', techniciens);
                         userFound = true;
                     }
                 }
@@ -2401,7 +2428,7 @@
                     const servIndex = services.findIndex(s => s.nom === currentServiceInfo.nom);
                     if (servIndex !== -1) {
                         services[servIndex].code = newPass;
-                        localStorage.setItem('hsjda_services', JSON.stringify(services));
+                        sauvegarderDonneesFirebase('services', services);
                         userFound = true;
                     }
                 }
@@ -2411,7 +2438,7 @@
                 if (visiteurs.includes(currentPass)) {
                     const index = visiteurs.indexOf(currentPass);
                     visiteurs[index] = newPass;
-                    localStorage.setItem('hsjda_visitors', JSON.stringify(visiteurs));
+                    sauvegarderDonneesFirebase('visiteurs', visiteurs);
                     userFound = true;
                 }
                 break;
@@ -2515,7 +2542,6 @@
                     lastBackup: lastBackupTime
                 };
                 localStorage.setItem('hsjda_email_config', JSON.stringify(config));
-                updateSyncStatus();
                 showNotification('Sauvegarde envoyée par email');
             }, function(error) {
                 console.error('Erreur email:', error);
@@ -2531,44 +2557,8 @@
         
         if (backupEmail && backupFrequency > 0 && estAdminPrincipal) {
             syncInterval = setInterval(() => {
-                verifierEtSynchroniser();
+                envoyerSauvegardeEmail();
             }, backupFrequency * 60 * 60 * 1000);
-        }
-    }
-
-    // Vérifier et synchroniser
-    function verifierEtSynchroniser() {
-        if (!backupEmail || !estAdminPrincipal) return;
-        
-        const now = new Date();
-        const lastBackup = lastBackupTime ? new Date(lastBackupTime) : null;
-        
-        if (!lastBackup) {
-            envoyerSauvegardeEmail();
-            return;
-        }
-        
-        const hoursSinceLastBackup = (now - lastBackup) / (1000 * 60 * 60);
-        
-        if (hoursSinceLastBackup >= backupFrequency) {
-            envoyerSauvegardeEmail();
-        }
-    }
-
-    // Mise à jour du statut de synchronisation
-    function updateSyncStatus() {
-        const syncMessage = document.getElementById('syncMessage');
-        const lastSyncEl = document.getElementById('lastSync');
-        
-        if (lastBackupTime) {
-            const date = new Date(lastBackupTime);
-            lastSyncEl.textContent = ` - Dernière synchro: ${date.toLocaleString()}`;
-        } else {
-            lastSyncEl.textContent = '';
-        }
-        
-        if (backupEmail) {
-            syncMessage.textContent = `Sauvegarde automatique configurée vers: ${backupEmail}`;
         }
     }
 
@@ -2725,7 +2715,7 @@
     };
 
     // Créer un administrateur (seulement pour l'admin principal)
-    window.creerAdminFromPanel = function() {
+    window.creerAdminFromPanel = async function() {
         if (!estAdminPrincipal) {
             alert("Seul l'administrateur principal peut ajouter des administrateurs");
             return;
@@ -2750,7 +2740,7 @@
         }
         
         administrateurs.push({nom, code});
-        localStorage.setItem('hsjda_administrateurs', JSON.stringify(administrateurs));
+        await sauvegarderDonneesFirebase('administrateurs', administrateurs);
         
         document.getElementById('newAdminName2').value = '';
         document.getElementById('newAdminPass2').value = '';
@@ -2761,7 +2751,7 @@
     };
 
     // Supprimer un administrateur (seulement pour l'admin principal)
-    window.supprimerAdmin = function(code) {
+    window.supprimerAdmin = async function(code) {
         if (!estAdminPrincipal) {
             alert("Seul l'administrateur principal peut supprimer des administrateurs");
             return;
@@ -2775,7 +2765,7 @@
         if (confirm("Supprimer cet administrateur ?")) {
             const admin = administrateurs.find(a => a.code === code);
             administrateurs = administrateurs.filter(a => a.code !== code);
-            localStorage.setItem('hsjda_administrateurs', JSON.stringify(administrateurs));
+            await sauvegarderDonneesFirebase('administrateurs', administrateurs);
             afficherListeAdmins();
             ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Suppression de l'administrateur ${admin?.nom}`);
             showNotification('Administrateur supprimé');
@@ -2828,7 +2818,7 @@
         equipementEnCoursDeRebut = null;
     };
 
-    window.confirmerMiseAuRebut = function() {
+    window.confirmerMiseAuRebut = async function() {
         if (!equipementEnCoursDeRebut) return;
         
         const dateRebut = document.getElementById('rebutDate').value;
@@ -2866,8 +2856,8 @@
         equipementsRebut.unshift(rebutRecord);
         equipements.splice(equip.originalIndex, 1);
         
-        localStorage.setItem('hsjda_pro_data_v4', JSON.stringify(equipements));
-        localStorage.setItem('hsjda_rebut_v1', JSON.stringify(equipementsRebut));
+        await sauvegarderDonneesFirebase('equipements', equipements);
+        await sauvegarderDonneesFirebase('equipementsRebut', equipementsRebut);
         
         ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Mise au rebut: ${equip.nom} (${equip.matricule})`);
         
@@ -2877,7 +2867,7 @@
         showNotification('Équipement mis au rebut avec succès');
     };
 
-    window.restaurerEquipement = function(index) {
+    window.restaurerEquipement = async function(index) {
         if (currentMode !== 'admin') return;
         
         const rebut = equipementsRebut[index];
@@ -2889,8 +2879,8 @@
             equipements.push(equipRestored);
             equipementsRebut.splice(index, 1);
             
-            localStorage.setItem('hsjda_pro_data_v4', JSON.stringify(equipements));
-            localStorage.setItem('hsjda_rebut_v1', JSON.stringify(equipementsRebut));
+            await sauvegarderDonneesFirebase('equipements', equipements);
+            await sauvegarderDonneesFirebase('equipementsRebut', equipementsRebut);
             
             ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Restauration rebut: ${rebut.nom} (${rebut.matricule})`);
             
@@ -2900,7 +2890,7 @@
         }
     };
 
-    window.supprimerRebutPermanent = function(index) {
+    window.supprimerRebutPermanent = async function(index) {
         if (currentMode !== 'admin') return;
         
         const rebut = equipementsRebut[index];
@@ -2908,7 +2898,7 @@
         
         if (confirm(`⚠️ Suppression PERMANENTE de l'équipement "${rebut.nom}" (${rebut.matricule}). Cette action est irréversible. Confirmer ?`)) {
             equipementsRebut.splice(index, 1);
-            localStorage.setItem('hsjda_rebut_v1', JSON.stringify(equipementsRebut));
+            await sauvegarderDonneesFirebase('equipementsRebut', equipementsRebut);
             
             ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Suppression permanente rebut: ${rebut.nom} (${rebut.matricule})`);
             
@@ -3241,7 +3231,6 @@
             }
         }
 
-        updateSyncStatus();
         configurerMenuParMode();
         
         const techList = document.getElementById('techList');
@@ -3336,27 +3325,27 @@
     };
 
     // Gestion des visiteurs, techniciens, services
-    window.ajouterVisiteur = function() {
+    window.ajouterVisiteur = async function() {
         if (!estAdminPrincipal) return;
         const newCode = document.getElementById('newVisitorCode').value.trim();
         if (!newCode) return alert("Entrez un code");
         if (visiteurs.includes(newCode)) return alert("Existe déjà");
         visiteurs.push(newCode);
-        localStorage.setItem('hsjda_visitors', JSON.stringify(visiteurs));
+        await sauvegarderDonneesFirebase('visiteurs', visiteurs);
         document.getElementById('newVisitorCode').value = '';
         afficherListeVisiteursEtTechs();
         ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Ajout visiteur: ${newCode}`);
         showNotification('Code visiteur ajouté');
     };
 
-    window.ajouterTechnicien = function() {
+    window.ajouterTechnicien = async function() {
         if (!estAdminPrincipal) return;
         const code = document.getElementById('newTechCode').value.trim();
         const nom = document.getElementById('newTechName').value.trim();
         if (!code || !nom) return alert("Code et nom requis");
         if (techniciens.some(t => t.code === code)) return alert("Code déjà utilisé");
         techniciens.push({code, nom});
-        localStorage.setItem('hsjda_techniciens', JSON.stringify(techniciens));
+        await sauvegarderDonneesFirebase('techniciens', techniciens);
         document.getElementById('newTechCode').value = ''; 
         document.getElementById('newTechName').value = '';
         afficherListeVisiteursEtTechs();
@@ -3364,14 +3353,14 @@
         showNotification('Technicien ajouté');
     };
 
-    window.ajouterService = function() {
+    window.ajouterService = async function() {
         if (!estAdminPrincipal) return;
         const code = document.getElementById('newServiceCode').value.trim();
         const nom = document.getElementById('newServiceName').value.trim();
         if (!code || !nom) return alert("Code et nom requis");
         if (services.some(s => s.code === code)) return alert("Code déjà utilisé");
         services.push({code, nom});
-        localStorage.setItem('hsjda_services', JSON.stringify(services));
+        await sauvegarderDonneesFirebase('services', services);
         document.getElementById('newServiceCode').value = ''; 
         document.getElementById('newServiceName').value = '';
         afficherListeVisiteursEtTechs();
@@ -3379,35 +3368,35 @@
         showNotification('Service ajouté');
     };
 
-    window.supprimerVisiteur = function(code) {
+    window.supprimerVisiteur = async function(code) {
         if (!estAdminPrincipal) return;
         if (confirm(`Supprimer ${code} ?`)) { 
             visiteurs = visiteurs.filter(v => v !== code); 
-            localStorage.setItem('hsjda_visitors', JSON.stringify(visiteurs)); 
+            await sauvegarderDonneesFirebase('visiteurs', visiteurs); 
             afficherListeVisiteursEtTechs();
             ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Suppression visiteur: ${code}`);
             showNotification('Visiteur supprimé');
         }
     };
 
-    window.supprimerTechnicien = function(code) {
+    window.supprimerTechnicien = async function(code) {
         if (!estAdminPrincipal) return;
         if (confirm(`Supprimer le technicien ?`)) { 
             const tech = techniciens.find(t => t.code === code);
             techniciens = techniciens.filter(t => t.code !== code); 
-            localStorage.setItem('hsjda_techniciens', JSON.stringify(techniciens)); 
+            await sauvegarderDonneesFirebase('techniciens', techniciens); 
             afficherListeVisiteursEtTechs();
             ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Suppression technicien: ${tech?.nom}`);
             showNotification('Technicien supprimé');
         }
     };
 
-    window.supprimerService = function(code) {
+    window.supprimerService = async function(code) {
         if (!estAdminPrincipal) return;
         if (confirm(`Supprimer le service ?`)) { 
             const serv = services.find(s => s.code === code);
             services = services.filter(s => s.code !== code); 
-            localStorage.setItem('hsjda_services', JSON.stringify(services)); 
+            await sauvegarderDonneesFirebase('services', services); 
             afficherListeVisiteursEtTechs();
             ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Suppression service: ${serv?.nom}`);
             showNotification('Service supprimé');
@@ -3532,7 +3521,7 @@
         return `HSJDA/${prefixe}/${codeNom}/${annee}/${compteur}`; 
     }
 
-    window.ajouterOuModifier = function() {
+    window.ajouterOuModifier = async function() {
         if (currentMode !== 'admin') return;
         const nom = document.getElementById('nom').value.trim();
         const service = document.getElementById('service').value;
@@ -3554,6 +3543,7 @@
             equipData.matricule = genererMatricule(service, nom); 
             equipData.etat = "Fonctionnel"; 
             equipements.push(equipData); 
+            await sauvegarderDonneesFirebase('equipements', equipements);
             ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Ajout équipement: ${nom}`);
             showNotification('Équipement ajouté');
         } else { 
@@ -3561,10 +3551,10 @@
             equipData.etat = equipements[editIndex].etat; 
             equipements[editIndex] = equipData; 
             annulerModification(); 
+            await sauvegarderDonneesFirebase('equipements', equipements);
             ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Modification équipement: ${nom}`);
             showNotification('Équipement modifié');
         }
-        localStorage.setItem('hsjda_pro_data_v4', JSON.stringify(equipements)); 
         afficher(); 
         viderFormulaire();
         afficherMaintenance();
@@ -3609,11 +3599,11 @@
         document.getElementById('societePrestation').value = '';
     }
 
-    window.changerEtat = function(index) { 
+    window.changerEtat = async function(index) { 
         if (currentMode !== 'admin') return; 
         if (index >= 0 && index < equipements.length) { 
             equipements[index].etat = equipements[index].etat === 'Fonctionnel' ? 'En Panne' : 'Fonctionnel'; 
-            localStorage.setItem('hsjda_pro_data_v4', JSON.stringify(equipements)); 
+            await sauvegarderDonneesFirebase('equipements', equipements); 
             afficher(); 
             ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Changement état: ${equipements[index].nom} -> ${equipements[index].etat}`);
             showNotification('État modifié');
@@ -3713,7 +3703,7 @@
         });
     };
 
-    window.ajouterIntervention = function() {
+    window.ajouterIntervention = async function() {
         if (currentMode === 'visitor' || currentMode === 'service') return;
         const tech = document.getElementById('techNom').value.trim();
         const service = document.getElementById('serviceInterv').value;
@@ -3735,7 +3725,7 @@
             dateSaisie: new Date().toISOString()
         };
         interventions.unshift(intervention);
-        localStorage.setItem('hsjda_journal_v1', JSON.stringify(interventions));
+        await sauvegarderDonneesFirebase('interventions', interventions);
         afficherJournal();
         
         if (estAdminPrincipal) {
@@ -3760,11 +3750,11 @@
         calculerStatistiquesMaintenance();
     };
 
-    window.supprimerIntervention = function(id) {
+    window.supprimerIntervention = async function(id) {
         if (currentMode !== 'admin') return;
         if (!confirm("Supprimer cette intervention ?")) return;
         interventions = interventions.filter(i => i.id != id);
-        localStorage.setItem('hsjda_journal_v1', JSON.stringify(interventions));
+        await sauvegarderDonneesFirebase('interventions', interventions);
         afficherJournal();
         if (estAdminPrincipal) ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', 'Suppression intervention');
         showNotification('Intervention supprimée');
@@ -3810,7 +3800,7 @@
         return `BES-${annee}-${compteur}`;
     }
 
-    window.ajouterBesoin = function() {
+    window.ajouterBesoin = async function() {
         if (currentMode === 'visitor' || currentMode === 'service') return;
         
         const dateEmission = document.getElementById('dateEmission').value;
@@ -3835,7 +3825,7 @@
         };
 
         expressionsBesoin.unshift(besoin);
-        localStorage.setItem('hsjda_besoins_v1', JSON.stringify(expressionsBesoin));
+        await sauvegarderDonneesFirebase('expressionsBesoin', expressionsBesoin);
         
         if (estAdminPrincipal) {
             ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Ajout besoin: ${designation}`);
@@ -3853,22 +3843,22 @@
         afficherBesoins();
     };
 
-    window.supprimerBesoin = function(id) {
+    window.supprimerBesoin = async function(id) {
         if (currentMode !== 'admin') return;
         if (!confirm("Supprimer cette expression de besoin ?")) return;
         expressionsBesoin = expressionsBesoin.filter(b => b.id != id);
-        localStorage.setItem('hsjda_besoins_v1', JSON.stringify(expressionsBesoin));
+        await sauvegarderDonneesFirebase('expressionsBesoin', expressionsBesoin);
         afficherBesoins();
         if (estAdminPrincipal) ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', 'Suppression besoin');
         showNotification('Besoin supprimé');
     };
 
-    window.modifierStatutBesoin = function(id, nouveauStatut) {
+    window.modifierStatutBesoin = async function(id, nouveauStatut) {
         if (currentMode === 'visitor') return;
         const besoin = expressionsBesoin.find(b => b.id == id);
         if (besoin) {
             besoin.statut = nouveauStatut;
-            localStorage.setItem('hsjda_besoins_v1', JSON.stringify(expressionsBesoin));
+            await sauvegarderDonneesFirebase('expressionsBesoin', expressionsBesoin);
             afficherBesoins();
             showNotification('Statut modifié');
         }
@@ -4001,7 +3991,7 @@
         });
     }
 
-    window.soumettreDemande = function() {
+    window.soumettreDemande = async function() {
         if (currentMode !== 'service' && currentMode !== 'admin') {
             alert("Veuillez d'abord vous connecter avec votre code service");
             return;
@@ -4034,7 +4024,7 @@
         };
 
         demandes.unshift(demande);
-        localStorage.setItem('hsjda_demandes_v1', JSON.stringify(demandes));
+        await sauvegarderDonneesFirebase('demandes', demandes);
         
         if (estAdminPrincipal) ajouterLog(currentServiceInfo?.nom || 'Service', 'Service', `Nouvelle demande: ${equipement}`);
         showNotification('Demande envoyée avec succès !');
@@ -4087,12 +4077,12 @@
         });
     }
 
-    window.modifierStatutDemande = function(id, nouveauStatut) {
+    window.modifierStatutDemande = async function(id, nouveauStatut) {
         if (currentMode !== 'admin') return;
         const demande = demandes.find(d => d.id == id);
         if (demande) {
             demande.statut = nouveauStatut;
-            localStorage.setItem('hsjda_demandes_v1', JSON.stringify(demandes));
+            await sauvegarderDonneesFirebase('demandes', demandes);
             afficherDemandes();
             showNotification('Statut de la demande modifié');
         }
@@ -4149,47 +4139,47 @@
                 
                 if (data.administrateurs) { 
                     administrateurs = data.administrateurs; 
-                    localStorage.setItem('hsjda_administrateurs', JSON.stringify(administrateurs)); 
+                    sauvegarderDonneesFirebase('administrateurs', administrateurs);
                 }
                 if (data.equipements) { 
                     equipements = data.equipements; 
-                    localStorage.setItem('hsjda_pro_data_v4', JSON.stringify(equipements)); 
+                    sauvegarderDonneesFirebase('equipements', equipements);
                 }
                 if (data.equipementsRebut) {
                     equipementsRebut = data.equipementsRebut;
-                    localStorage.setItem('hsjda_rebut_v1', JSON.stringify(equipementsRebut));
+                    sauvegarderDonneesFirebase('equipementsRebut', equipementsRebut);
                 }
                 if (data.visiteurs) { 
                     visiteurs = data.visiteurs; 
-                    localStorage.setItem('hsjda_visitors', JSON.stringify(visiteurs)); 
+                    sauvegarderDonneesFirebase('visiteurs', visiteurs);
                 }
                 if (data.techniciens) { 
                     techniciens = data.techniciens; 
-                    localStorage.setItem('hsjda_techniciens', JSON.stringify(techniciens)); 
+                    sauvegarderDonneesFirebase('techniciens', techniciens);
                 }
                 if (data.services) { 
                     services = data.services; 
-                    localStorage.setItem('hsjda_services', JSON.stringify(services)); 
+                    sauvegarderDonneesFirebase('services', services);
                 }
                 if (data.interventions) { 
                     interventions = data.interventions; 
-                    localStorage.setItem('hsjda_journal_v1', JSON.stringify(interventions)); 
+                    sauvegarderDonneesFirebase('interventions', interventions);
                 }
                 if (data.expressionsBesoin) { 
                     expressionsBesoin = data.expressionsBesoin; 
-                    localStorage.setItem('hsjda_besoins_v1', JSON.stringify(expressionsBesoin)); 
+                    sauvegarderDonneesFirebase('expressionsBesoin', expressionsBesoin);
                 }
                 if (data.demandes) { 
                     demandes = data.demandes; 
-                    localStorage.setItem('hsjda_demandes_v1', JSON.stringify(demandes)); 
+                    sauvegarderDonneesFirebase('demandes', demandes);
                 }
                 if (data.logsConnexion) {
                     logsConnexion = data.logsConnexion;
-                    localStorage.setItem('hsjda_logs', JSON.stringify(logsConnexion));
+                    sauvegarderDonneesFirebase('logsConnexion', logsConnexion);
                 }
                 if (data.configVisiteur) {
                     configVisiteur = data.configVisiteur;
-                    localStorage.setItem('hsjda_visitor_config', JSON.stringify(configVisiteur));
+                    sauvegarderDonneesFirebase('configVisiteur', configVisiteur);
                 }
                 
                 if (estAdminPrincipal) {
@@ -4313,7 +4303,7 @@
                 societePrestation: "MED-TECH Services",
                 etat: "En Panne" 
             });
-            localStorage.setItem('hsjda_pro_data_v4', JSON.stringify(equipements));
+            sauvegarderDonneesFirebase('equipements', equipements);
         }
     });
 })();
