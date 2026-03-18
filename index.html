@@ -11,6 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <style>
+        /* [Garder tout votre CSS existant] */
         * { 
             box-sizing: border-box; 
             margin: 0; 
@@ -1035,8 +1036,8 @@
             font-weight: bold;
         }
         
-        /* Configuration visiteur */
-        .visitor-config {
+        /* Configuration visiteur et admin */
+        .visitor-config, .admin-config {
             background: #f0f7fa;
             padding: 20px;
             border-radius: 16px;
@@ -1044,7 +1045,12 @@
             border: 2px solid #3498db;
         }
         
-        .visitor-config h4 {
+        .admin-config {
+            border-color: #27ae60;
+            background: #f1f9f1;
+        }
+        
+        .visitor-config h4, .admin-config h4 {
             color: #2c3e50;
             margin-bottom: 15px;
             font-size: 1.1rem;
@@ -1090,10 +1096,12 @@
             display: flex;
             gap: 10px;
             margin-top: 20px;
+            flex-wrap: wrap;
         }
         
         .config-actions button {
             flex: 1;
+            min-width: 120px;
         }
         
         /* Responsive pour tablettes et mobiles */
@@ -1166,6 +1174,10 @@
             .permissions-table th,
             .permissions-table td {
                 padding: 8px 4px;
+            }
+            
+            .config-actions button {
+                width: 100%;
             }
         }
         
@@ -1746,9 +1758,122 @@
             <p id="adminPrivilegesText">Vous avez tous les droits, y compris l'ajout d'autres administrateurs.</p>
         </div>
 
+        <!-- Configuration des permissions des administrateurs (NOUVEAU) -->
+        <div class="admin-section">
+            <h3>⚙️ Configuration des permissions des administrateurs</h3>
+            <p class="info-mode">Définissez les droits des administrateurs secondaires (l'admin principal a tous les droits par défaut) :</p>
+            
+            <div class="admin-config">
+                <h4>📋 Droits des administrateurs secondaires</h4>
+                
+                <div class="config-checkbox">
+                    <input type="checkbox" id="adminSecondaireAjoutEquip" checked>
+                    <label>➕ Ajout/Modification d'équipements</label>
+                    <span>(autoriser l'ajout et la modification d'équipements)</span>
+                </div>
+                
+                <div class="config-checkbox">
+                    <input type="checkbox" id="adminSecondaireSuppressionEquip" checked>
+                    <label>🗑️ Suppression d'équipements</label>
+                    <span>(autoriser la suppression d'équipements)</span>
+                </div>
+                
+                <div class="config-checkbox">
+                    <input type="checkbox" id="adminSecondaireRebut" checked>
+                    <label>⏳ Mise au rebut</label>
+                    <span>(autoriser la mise au rebut d'équipements)</span>
+                </div>
+                
+                <div class="config-checkbox">
+                    <input type="checkbox" id="adminSecondaireJournal" checked>
+                    <label>📓 Gestion du journal</label>
+                    <span>(autoriser l'ajout/suppression d'interventions)</span>
+                </div>
+                
+                <div class="config-checkbox">
+                    <input type="checkbox" id="adminSecondaireBesoins" checked>
+                    <label>📝 Gestion des besoins</label>
+                    <span>(autoriser l'ajout/suppression des expressions de besoin)</span>
+                </div>
+                
+                <div class="config-checkbox">
+                    <input type="checkbox" id="adminSecondaireDemandes" checked>
+                    <label>📨 Gestion des demandes</label>
+                    <span>(autoriser le traitement des demandes de service)</span>
+                </div>
+                
+                <div class="config-checkbox">
+                    <input type="checkbox" id="adminSecondaireVisiteurs" checked>
+                    <label>👥 Gestion des visiteurs</label>
+                    <span>(autoriser l'ajout/suppression de codes visiteurs)</span>
+                </div>
+                
+                <div class="config-checkbox">
+                    <input type="checkbox" id="adminSecondaireTechniciens" checked>
+                    <label>👨‍🔧 Gestion des techniciens</label>
+                    <span>(autoriser l'ajout/suppression de techniciens)</span>
+                </div>
+                
+                <div class="config-checkbox">
+                    <input type="checkbox" id="adminSecondaireServices" checked>
+                    <label>🏥 Gestion des services</label>
+                    <span>(autoriser l'ajout/suppression de services)</span>
+                </div>
+                
+                <div class="config-checkbox">
+                    <input type="checkbox" id="adminSecondaireSauvegarde" checked>
+                    <label>💾 Sauvegarde/Restauration</label>
+                    <span>(autoriser les sauvegardes locales et restaurations)</span>
+                </div>
+                
+                <div class="config-checkbox">
+                    <input type="checkbox" id="adminSecondaireLogs" checked>
+                    <label>📊 Consultation des logs</label>
+                    <span>(autoriser la consultation des journaux de connexion)</span>
+                </div>
+                
+                <div class="config-checkbox">
+                    <input type="checkbox" id="adminSecondairePersonnalisation" checked>
+                    <label>🎨 Personnalisation</label>
+                    <span>(autoriser les changements d'apparence/logo)</span>
+                </div>
+                
+                <div class="config-checkbox">
+                    <input type="checkbox" id="adminSecondaireEmail" checked>
+                    <label>📧 Configuration email</label>
+                    <span>(autoriser la configuration des emails de sauvegarde)</span>
+                </div>
+                
+                <div class="config-checkbox">
+                    <input type="checkbox" id="adminSecondaireGestionAdmins" checked>
+                    <label>👥 Gestion des admins</label>
+                    <span>⚠️ (attention : autoriser la création d'autres administrateurs)</span>
+                </div>
+                
+                <div class="config-checkbox">
+                    <input type="checkbox" id="adminSecondaireSuppressionLogs" checked>
+                    <label>🗑️ Effacement des logs</label>
+                    <span>(autoriser la suppression des journaux de connexion)</span>
+                </div>
+                
+                <div class="config-checkbox">
+                    <input type="checkbox" id="adminSecondaireModeSwitch" checked>
+                    <label>🔄 Changement de mode</label>
+                    <span>(autoriser le passage en mode technicien/visiteur/service)</span>
+                </div>
+                
+                <div class="config-actions">
+                    <button class="btn-success" onclick="sauvegarderConfigAdmin()">💾 Sauvegarder configuration</button>
+                    <button class="btn-info" onclick="selectionnerToutAdmin(true)">✅ Tout sélectionner</button>
+                    <button class="btn-warning" onclick="selectionnerToutAdmin(false)">⬜ Tout désélectionner</button>
+                    <button class="btn-primary" onclick="resetConfigAdmin()" style="background:#2c3e50; color:white;">↺ Réinitialiser</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Tableau des permissions pour les admins secondaires -->
         <div class="admin-section">
-            <h3>📋 Permissions des administrateurs</h3>
+            <h3>📋 Résumé des permissions des administrateurs</h3>
             <table class="permissions-table">
                 <thead>
                     <tr>
@@ -1757,57 +1882,13 @@
                         <th>Admin Secondaire</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td><strong>Journal des connexions</strong></td>
-                        <td class="allowed">✅ Visible</td>
-                        <td class="not-allowed">❌ Non visible</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Effacer les logs</strong></td>
-                        <td class="allowed">✅ Autorisation</td>
-                        <td class="not-allowed">❌ Non autorisé</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Personnalisation (fonds d'écran)</strong></td>
-                        <td class="allowed">✅ Autorisation</td>
-                        <td class="not-allowed">❌ Non autorisé</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Changer le logo</strong></td>
-                        <td class="allowed">✅ Autorisation</td>
-                        <td class="not-allowed">❌ Non autorisé</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Sauvegarde locale</strong></td>
-                        <td class="allowed">✅ Autorisation</td>
-                        <td class="not-allowed">❌ Non autorisé</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Restauration</strong></td>
-                        <td class="allowed">✅ Autorisation</td>
-                        <td class="not-allowed">❌ Non autorisé</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Synchronisation en ligne</strong></td>
-                        <td class="allowed">✅ Autorisation</td>
-                        <td class="not-allowed">❌ Non autorisé</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Configuration Email</strong></td>
-                        <td class="allowed">✅ Autorisation</td>
-                        <td class="not-allowed">❌ Non autorisé</td>
-                    </tr>
-                    <tr>
-                        <td><strong>Gestion des administrateurs</strong></td>
-                        <td class="allowed">✅ Autorisation</td>
-                        <td class="not-allowed">❌ Non autorisé</td>
-                    </tr>
+                <tbody id="adminPermissionsSummary">
+                    <!-- Rempli par JavaScript -->
                 </tbody>
             </table>
         </div>
 
-        <!-- Configuration des accès visiteurs -->
+        <!-- Configuration des accès visiteurs (déjà existant) -->
         <div class="admin-section">
             <h3>👁️ Configuration des accès visiteurs</h3>
             <p class="info-mode">Sélectionnez les volets que les visiteurs peuvent voir en lecture seule :</p>
@@ -2069,6 +2150,26 @@
         planning: false
     };
 
+    // NOUVEAU : Configuration des permissions des administrateurs secondaires
+    let configAdminSecondaire = {
+        ajoutEquip: true,
+        suppressionEquip: true,
+        rebut: true,
+        journal: true,
+        besoins: true,
+        demandes: true,
+        visiteurs: true,
+        techniciens: true,
+        services: true,
+        sauvegarde: true,
+        logs: true,
+        personnalisation: true,
+        email: true,
+        gestionAdmins: false,  // Par défaut, les admins secondaires ne peuvent pas gérer d'autres admins
+        suppressionLogs: false, // Par défaut, ils ne peuvent pas effacer les logs
+        modeSwitch: true        // Peuvent changer de mode par défaut
+    };
+
     // Initialisation EmailJS
     emailjs.init("Gg0-z4pm0nEr66hAX");
 
@@ -2146,6 +2247,12 @@
                 configVisiteur = configDoc.data().valeurs || configVisiteur;
             }
             
+            // NOUVEAU : Charger config admin
+            const configAdminDoc = await db.collection('data').doc('configAdminSecondaire').get();
+            if (configAdminDoc.exists) {
+                configAdminSecondaire = configAdminDoc.data().valeurs || configAdminSecondaire;
+            }
+            
             updateSyncStatus('connected', 'Données synchronisées');
             
         } catch (error) {
@@ -2203,33 +2310,186 @@
     chargerDonneesFirebase();
     ecouterChangements();
 
-    // Fonctions pour la configuration visiteur
-    window.sauvegarderConfigVisiteur = function() {
-        configVisiteur = {
-            inventaire: document.getElementById('visitorInventaire').checked,
-            journal: document.getElementById('visitorJournal').checked,
-            besoins: document.getElementById('visitorBesoins').checked,
-            maintenance: document.getElementById('visitorMaintenance').checked,
-            demande: document.getElementById('visitorDemande').checked,
-            rebut: document.getElementById('visitorRebut').checked,
-            planning: document.getElementById('visitorPlanning').checked
+    // NOUVEAU : Fonctions pour la configuration des administrateurs
+    window.sauvegarderConfigAdmin = function() {
+        configAdminSecondaire = {
+            ajoutEquip: document.getElementById('adminSecondaireAjoutEquip').checked,
+            suppressionEquip: document.getElementById('adminSecondaireSuppressionEquip').checked,
+            rebut: document.getElementById('adminSecondaireRebut').checked,
+            journal: document.getElementById('adminSecondaireJournal').checked,
+            besoins: document.getElementById('adminSecondaireBesoins').checked,
+            demandes: document.getElementById('adminSecondaireDemandes').checked,
+            visiteurs: document.getElementById('adminSecondaireVisiteurs').checked,
+            techniciens: document.getElementById('adminSecondaireTechniciens').checked,
+            services: document.getElementById('adminSecondaireServices').checked,
+            sauvegarde: document.getElementById('adminSecondaireSauvegarde').checked,
+            logs: document.getElementById('adminSecondaireLogs').checked,
+            personnalisation: document.getElementById('adminSecondairePersonnalisation').checked,
+            email: document.getElementById('adminSecondaireEmail').checked,
+            gestionAdmins: document.getElementById('adminSecondaireGestionAdmins').checked,
+            suppressionLogs: document.getElementById('adminSecondaireSuppressionLogs').checked,
+            modeSwitch: document.getElementById('adminSecondaireModeSwitch').checked
         };
-        sauvegarderDonneesFirebase('configVisiteur', configVisiteur);
-        showNotification('Configuration visiteur sauvegardée');
-        if (currentMode === 'visitor') {
-            configurerMenuParMode();
-        }
+        
+        sauvegarderDonneesFirebase('configAdminSecondaire', configAdminSecondaire);
+        afficherResumePermissions();
+        showNotification('Configuration des administrateurs sauvegardée');
     };
 
-    window.selectionnerToutVisiteur = function(etat) {
-        document.getElementById('visitorInventaire').checked = etat;
-        document.getElementById('visitorJournal').checked = etat;
-        document.getElementById('visitorBesoins').checked = etat;
-        document.getElementById('visitorMaintenance').checked = etat;
-        document.getElementById('visitorDemande').checked = etat;
-        document.getElementById('visitorRebut').checked = etat;
-        document.getElementById('visitorPlanning').checked = etat;
+    window.selectionnerToutAdmin = function(etat) {
+        document.getElementById('adminSecondaireAjoutEquip').checked = etat;
+        document.getElementById('adminSecondaireSuppressionEquip').checked = etat;
+        document.getElementById('adminSecondaireRebut').checked = etat;
+        document.getElementById('adminSecondaireJournal').checked = etat;
+        document.getElementById('adminSecondaireBesoins').checked = etat;
+        document.getElementById('adminSecondaireDemandes').checked = etat;
+        document.getElementById('adminSecondaireVisiteurs').checked = etat;
+        document.getElementById('adminSecondaireTechniciens').checked = etat;
+        document.getElementById('adminSecondaireServices').checked = etat;
+        document.getElementById('adminSecondaireSauvegarde').checked = etat;
+        document.getElementById('adminSecondaireLogs').checked = etat;
+        document.getElementById('adminSecondairePersonnalisation').checked = etat;
+        document.getElementById('adminSecondaireEmail').checked = etat;
+        document.getElementById('adminSecondaireGestionAdmins').checked = etat;
+        document.getElementById('adminSecondaireSuppressionLogs').checked = etat;
+        document.getElementById('adminSecondaireModeSwitch').checked = etat;
     };
+
+    window.resetConfigAdmin = function() {
+        configAdminSecondaire = {
+            ajoutEquip: true,
+            suppressionEquip: true,
+            rebut: true,
+            journal: true,
+            besoins: true,
+            demandes: true,
+            visiteurs: true,
+            techniciens: true,
+            services: true,
+            sauvegarde: true,
+            logs: true,
+            personnalisation: true,
+            email: true,
+            gestionAdmins: false,
+            suppressionLogs: false,
+            modeSwitch: true
+        };
+        
+        document.getElementById('adminSecondaireAjoutEquip').checked = configAdminSecondaire.ajoutEquip;
+        document.getElementById('adminSecondaireSuppressionEquip').checked = configAdminSecondaire.suppressionEquip;
+        document.getElementById('adminSecondaireRebut').checked = configAdminSecondaire.rebut;
+        document.getElementById('adminSecondaireJournal').checked = configAdminSecondaire.journal;
+        document.getElementById('adminSecondaireBesoins').checked = configAdminSecondaire.besoins;
+        document.getElementById('adminSecondaireDemandes').checked = configAdminSecondaire.demandes;
+        document.getElementById('adminSecondaireVisiteurs').checked = configAdminSecondaire.visiteurs;
+        document.getElementById('adminSecondaireTechniciens').checked = configAdminSecondaire.techniciens;
+        document.getElementById('adminSecondaireServices').checked = configAdminSecondaire.services;
+        document.getElementById('adminSecondaireSauvegarde').checked = configAdminSecondaire.sauvegarde;
+        document.getElementById('adminSecondaireLogs').checked = configAdminSecondaire.logs;
+        document.getElementById('adminSecondairePersonnalisation').checked = configAdminSecondaire.personnalisation;
+        document.getElementById('adminSecondaireEmail').checked = configAdminSecondaire.email;
+        document.getElementById('adminSecondaireGestionAdmins').checked = configAdminSecondaire.gestionAdmins;
+        document.getElementById('adminSecondaireSuppressionLogs').checked = configAdminSecondaire.suppressionLogs;
+        document.getElementById('adminSecondaireModeSwitch').checked = configAdminSecondaire.modeSwitch;
+        
+        showNotification('Configuration réinitialisée');
+    };
+
+    function afficherResumePermissions() {
+        const tbody = document.getElementById('adminPermissionsSummary');
+        if (!tbody) return;
+        
+        tbody.innerHTML = `
+            <tr>
+                <td><strong>Ajout/Modification d'équipements</strong></td>
+                <td class="allowed">✅ Autorisation</td>
+                <td class="${configAdminSecondaire.ajoutEquip ? 'allowed' : 'not-allowed'}">${configAdminSecondaire.ajoutEquip ? '✅ Autorisation' : '❌ Non autorisé'}</td>
+            </tr>
+            <tr>
+                <td><strong>Suppression d'équipements</strong></td>
+                <td class="allowed">✅ Autorisation</td>
+                <td class="${configAdminSecondaire.suppressionEquip ? 'allowed' : 'not-allowed'}">${configAdminSecondaire.suppressionEquip ? '✅ Autorisation' : '❌ Non autorisé'}</td>
+            </tr>
+            <tr>
+                <td><strong>Mise au rebut</strong></td>
+                <td class="allowed">✅ Autorisation</td>
+                <td class="${configAdminSecondaire.rebut ? 'allowed' : 'not-allowed'}">${configAdminSecondaire.rebut ? '✅ Autorisation' : '❌ Non autorisé'}</td>
+            </tr>
+            <tr>
+                <td><strong>Gestion du journal</strong></td>
+                <td class="allowed">✅ Autorisation</td>
+                <td class="${configAdminSecondaire.journal ? 'allowed' : 'not-allowed'}">${configAdminSecondaire.journal ? '✅ Autorisation' : '❌ Non autorisé'}</td>
+            </tr>
+            <tr>
+                <td><strong>Gestion des besoins</strong></td>
+                <td class="allowed">✅ Autorisation</td>
+                <td class="${configAdminSecondaire.besoins ? 'allowed' : 'not-allowed'}">${configAdminSecondaire.besoins ? '✅ Autorisation' : '❌ Non autorisé'}</td>
+            </tr>
+            <tr>
+                <td><strong>Gestion des demandes</strong></td>
+                <td class="allowed">✅ Autorisation</td>
+                <td class="${configAdminSecondaire.demandes ? 'allowed' : 'not-allowed'}">${configAdminSecondaire.demandes ? '✅ Autorisation' : '❌ Non autorisé'}</td>
+            </tr>
+            <tr>
+                <td><strong>Gestion des visiteurs</strong></td>
+                <td class="allowed">✅ Autorisation</td>
+                <td class="${configAdminSecondaire.visiteurs ? 'allowed' : 'not-allowed'}">${configAdminSecondaire.visiteurs ? '✅ Autorisation' : '❌ Non autorisé'}</td>
+            </tr>
+            <tr>
+                <td><strong>Gestion des techniciens</strong></td>
+                <td class="allowed">✅ Autorisation</td>
+                <td class="${configAdminSecondaire.techniciens ? 'allowed' : 'not-allowed'}">${configAdminSecondaire.techniciens ? '✅ Autorisation' : '❌ Non autorisé'}</td>
+            </tr>
+            <tr>
+                <td><strong>Gestion des services</strong></td>
+                <td class="allowed">✅ Autorisation</td>
+                <td class="${configAdminSecondaire.services ? 'allowed' : 'not-allowed'}">${configAdminSecondaire.services ? '✅ Autorisation' : '❌ Non autorisé'}</td>
+            </tr>
+            <tr>
+                <td><strong>Sauvegarde/Restauration</strong></td>
+                <td class="allowed">✅ Autorisation</td>
+                <td class="${configAdminSecondaire.sauvegarde ? 'allowed' : 'not-allowed'}">${configAdminSecondaire.sauvegarde ? '✅ Autorisation' : '❌ Non autorisé'}</td>
+            </tr>
+            <tr>
+                <td><strong>Consultation des logs</strong></td>
+                <td class="allowed">✅ Autorisation</td>
+                <td class="${configAdminSecondaire.logs ? 'allowed' : 'not-allowed'}">${configAdminSecondaire.logs ? '✅ Autorisation' : '❌ Non autorisé'}</td>
+            </tr>
+            <tr>
+                <td><strong>Personnalisation</strong></td>
+                <td class="allowed">✅ Autorisation</td>
+                <td class="${configAdminSecondaire.personnalisation ? 'allowed' : 'not-allowed'}">${configAdminSecondaire.personnalisation ? '✅ Autorisation' : '❌ Non autorisé'}</td>
+            </tr>
+            <tr>
+                <td><strong>Configuration Email</strong></td>
+                <td class="allowed">✅ Autorisation</td>
+                <td class="${configAdminSecondaire.email ? 'allowed' : 'not-allowed'}">${configAdminSecondaire.email ? '✅ Autorisation' : '❌ Non autorisé'}</td>
+            </tr>
+            <tr>
+                <td><strong>Gestion des administrateurs</strong></td>
+                <td class="allowed">✅ Autorisation</td>
+                <td class="${configAdminSecondaire.gestionAdmins ? 'allowed' : 'not-allowed'}">${configAdminSecondaire.gestionAdmins ? '✅ Autorisation' : '❌ Non autorisé'}</td>
+            </tr>
+            <tr>
+                <td><strong>Effacement des logs</strong></td>
+                <td class="allowed">✅ Autorisation</td>
+                <td class="${configAdminSecondaire.suppressionLogs ? 'allowed' : 'not-allowed'}">${configAdminSecondaire.suppressionLogs ? '✅ Autorisation' : '❌ Non autorisé'}</td>
+            </tr>
+            <tr>
+                <td><strong>Changement de mode</strong></td>
+                <td class="allowed">✅ Autorisation</td>
+                <td class="${configAdminSecondaire.modeSwitch ? 'allowed' : 'not-allowed'}">${configAdminSecondaire.modeSwitch ? '✅ Autorisation' : '❌ Non autorisé'}</td>
+            </tr>
+        `;
+    }
+
+    // Vérifier les permissions d'un admin secondaire
+    function verifierPermissionAdmin(permission) {
+        if (estAdminPrincipal) return true; // L'admin principal a tous les droits
+        if (!estAdmin) return false;
+        
+        return configAdminSecondaire[permission] === true;
+    }
 
     // Mise à jour du statut de synchronisation
     function updateSyncStatus(status, message) {
@@ -2288,7 +2548,7 @@
 
     // Ajouter un log de connexion
     function ajouterLog(utilisateur, type, action) {
-        if (!estAdminPrincipal) return;
+        if (!estAdminPrincipal && !configAdminSecondaire.logs) return;
         const log = {
             date: new Date().toLocaleString(),
             utilisateur: utilisateur,
@@ -2303,7 +2563,7 @@
 
     // Afficher les logs
     function afficherLogs() {
-        if (!estAdminPrincipal) return;
+        if (!estAdminPrincipal && !configAdminSecondaire.logs) return;
         const tbody = document.getElementById('logsTableBody');
         if (!tbody) return;
         
@@ -2322,8 +2582,8 @@
 
     // Effacer les logs
     window.effacerLogs = async function() {
-        if (!estAdminPrincipal) {
-            alert("Seul l'administrateur principal peut effacer les logs");
+        if (!estAdminPrincipal && !configAdminSecondaire.suppressionLogs) {
+            alert("Vous n'avez pas la permission d'effacer les logs");
             return;
         }
         if (confirm("Effacer tous les logs de connexion ?")) {
@@ -2347,8 +2607,8 @@
 
     // Changer le mode (admin principal uniquement)
     window.changerMode = function(mode) {
-        if (!estAdminPrincipal) {
-            alert("Seul l'administrateur principal peut changer de mode");
+        if (!estAdminPrincipal && !configAdminSecondaire.modeSwitch) {
+            alert("Vous n'avez pas la permission de changer de mode");
             return;
         }
         
@@ -2466,8 +2726,8 @@
 
     // Configuration email de sauvegarde
     window.configurerEmailSauvegarde = function() {
-        if (!estAdminPrincipal) {
-            alert("Seul l'administrateur principal peut configurer les emails");
+        if (!estAdminPrincipal && !configAdminSecondaire.email) {
+            alert("Vous n'avez pas la permission de configurer les emails");
             return;
         }
         
@@ -2496,8 +2756,8 @@
 
     // Envoyer sauvegarde par email
     window.envoyerSauvegardeEmail = function() {
-        if (!estAdminPrincipal) {
-            alert("Seul l'administrateur principal peut envoyer des emails");
+        if (!estAdminPrincipal && !configAdminSecondaire.sauvegarde) {
+            alert("Vous n'avez pas la permission d'envoyer des sauvegardes");
             return;
         }
         
@@ -2518,6 +2778,7 @@
             demandes,
             logsConnexion,
             configVisiteur,
+            configAdminSecondaire,
             date: new Date().toISOString(), 
             version: '7.0' 
         };
@@ -2555,7 +2816,7 @@
             clearInterval(syncInterval);
         }
         
-        if (backupEmail && backupFrequency > 0 && estAdminPrincipal) {
+        if (backupEmail && backupFrequency > 0 && (estAdminPrincipal || configAdminSecondaire.sauvegarde)) {
             syncInterval = setInterval(() => {
                 envoyerSauvegardeEmail();
             }, backupFrequency * 60 * 60 * 1000);
@@ -2564,8 +2825,8 @@
 
     // Synchronisation manuelle en ligne
     window.synchroniserEnLigne = function() {
-        if (!estAdminPrincipal) {
-            alert("Seul l'administrateur principal peut synchroniser");
+        if (!estAdminPrincipal && !configAdminSecondaire.sauvegarde) {
+            alert("Vous n'avez pas la permission de synchroniser");
             return;
         }
         envoyerSauvegardeEmail();
@@ -2604,17 +2865,46 @@
         // Configuration selon le mode
         switch(currentMode) {
             case 'admin':
+                // Vérifier les permissions pour chaque fonctionnalité
+                if (!estAdminPrincipal) {
+                    menuRebut.disabled = !configAdminSecondaire.rebut;
+                    menuPlanning.disabled = false; // Planning visible
+                    
+                    // Désactiver les fonctionnalités selon la config
+                    if (!configAdminSecondaire.ajoutEquip) {
+                        document.querySelectorAll('#formContainer input, #formContainer select, #formContainer button:not(#btnAnnuler)').forEach(el => el.disabled = true);
+                    } else {
+                        document.querySelectorAll('#formContainer input, #formContainer select, #formContainer button:not(#btnAnnuler)').forEach(el => el.disabled = false);
+                    }
+                    
+                    if (!configAdminSecondaire.journal) {
+                        document.querySelectorAll('#journalForm input, #journalForm select, #journalForm button').forEach(el => el.disabled = true);
+                    } else {
+                        document.querySelectorAll('#journalForm input, #journalForm select, #journalForm button').forEach(el => el.disabled = false);
+                    }
+                    
+                    if (!configAdminSecondaire.besoins) {
+                        document.querySelectorAll('#besoinForm input, #besoinForm select, #besoinForm button').forEach(el => el.disabled = true);
+                    } else {
+                        document.querySelectorAll('#besoinForm input, #besoinForm select, #besoinForm button').forEach(el => el.disabled = false);
+                    }
+                    
+                    if (!configAdminSecondaire.demandes) {
+                        document.querySelectorAll('#demandeFormContainer input, #demandeFormContainer select, #demandeFormContainer button').forEach(el => el.disabled = true);
+                    } else {
+                        document.querySelectorAll('#demandeFormContainer input, #demandeFormContainer select, #demandeFormContainer button').forEach(el => el.disabled = false);
+                    }
+                }
+                
                 formContainer.style.display = 'grid';
                 journalForm.style.display = 'grid';
                 besoinForm.style.display = 'grid';
                 adminSection.style.display = 'block';
                 adminControls.style.display = estAdminPrincipal ? 'block' : 'none';
-                modeSwitchPanel.style.display = estAdminPrincipal ? 'flex' : 'none';
+                modeSwitchPanel.style.display = (estAdminPrincipal || configAdminSecondaire.modeSwitch) ? 'flex' : 'none';
                 adminReturnSection.style.display = 'none';
                 serviceFilter.style.display = 'none';
                 passwordSection.style.display = 'block';
-                menuRebut.disabled = false;
-                menuPlanning.disabled = false;
                 
                 // Pour les demandes de service en mode admin
                 serviceCodeSection.style.display = 'none';
@@ -2624,7 +2914,7 @@
                 break;
                 
             case 'technicien':
-                menuInv.disabled = false; // Technicien peut voir inventaire
+                menuInv.disabled = false;
                 menuBes.disabled = false;
                 menuDem.disabled = true;
                 menuRebut.disabled = true;
@@ -2663,7 +2953,6 @@
                 serviceFilter.style.display = 'block';
                 passwordSection.style.display = 'block';
                 
-                // Pour les demandes de service
                 if (currentServiceInfo) {
                     serviceCodeSection.style.display = 'none';
                     demandeFormContainer.style.display = 'grid';
@@ -2677,7 +2966,6 @@
                 break;
                 
             case 'visitor':
-                // Configuration visiteur (lecture seule selon config)
                 menuInv.disabled = !configVisiteur.inventaire;
                 menuJour.disabled = !configVisiteur.journal;
                 menuBes.disabled = !configVisiteur.besoins;
@@ -2789,7 +3077,7 @@
 
     // Fonctions pour la gestion des rebuts
     window.ouvrirModalRebut = function(index) {
-        if (currentMode !== 'admin') return;
+        if (currentMode !== 'admin' && !verifierPermissionAdmin('rebut')) return;
         
         const equip = equipements[index];
         if (!equip) return;
@@ -2868,7 +3156,7 @@
     };
 
     window.restaurerEquipement = async function(index) {
-        if (currentMode !== 'admin') return;
+        if (currentMode !== 'admin' && !verifierPermissionAdmin('rebut')) return;
         
         const rebut = equipementsRebut[index];
         if (!rebut) return;
@@ -2891,7 +3179,7 @@
     };
 
     window.supprimerRebutPermanent = async function(index) {
-        if (currentMode !== 'admin') return;
+        if (currentMode !== 'admin' && !verifierPermissionAdmin('rebut')) return;
         
         const rebut = equipementsRebut[index];
         if (!rebut) return;
@@ -2920,7 +3208,7 @@
         }
         
         equipementsRebut.forEach((rebut, idx) => {
-            const peutModifier = currentMode === 'admin';
+            const peutModifier = currentMode === 'admin' || verifierPermissionAdmin('rebut');
             const ligne = document.createElement('tr');
             ligne.innerHTML = `
                 <td><span class="matricule">${rebut.matricule || 'HSJDA/??'}</span></td>
@@ -3227,7 +3515,7 @@
                 adminPrivilegesText.textContent = 'Vous avez tous les droits, y compris l\'ajout d\'autres administrateurs.';
             } else if (estAdmin) {
                 adminStatusText.textContent = 'Vous êtes connecté en tant qu\'Administrateur Secondaire';
-                adminPrivilegesText.textContent = 'Vous avez accès limité (sans gestion des admins, logs, personnalisation).';
+                adminPrivilegesText.textContent = 'Vous avez des droits limités selon la configuration.';
             }
         }
 
@@ -3243,6 +3531,25 @@
         document.getElementById('numeroOrdre').value = genererNumeroOrdre();
         document.getElementById('dateEmission').value = new Date().toISOString().split('T')[0];
         
+        // Charger la configuration admin dans les cases à cocher
+        document.getElementById('adminSecondaireAjoutEquip').checked = configAdminSecondaire.ajoutEquip;
+        document.getElementById('adminSecondaireSuppressionEquip').checked = configAdminSecondaire.suppressionEquip;
+        document.getElementById('adminSecondaireRebut').checked = configAdminSecondaire.rebut;
+        document.getElementById('adminSecondaireJournal').checked = configAdminSecondaire.journal;
+        document.getElementById('adminSecondaireBesoins').checked = configAdminSecondaire.besoins;
+        document.getElementById('adminSecondaireDemandes').checked = configAdminSecondaire.demandes;
+        document.getElementById('adminSecondaireVisiteurs').checked = configAdminSecondaire.visiteurs;
+        document.getElementById('adminSecondaireTechniciens').checked = configAdminSecondaire.techniciens;
+        document.getElementById('adminSecondaireServices').checked = configAdminSecondaire.services;
+        document.getElementById('adminSecondaireSauvegarde').checked = configAdminSecondaire.sauvegarde;
+        document.getElementById('adminSecondaireLogs').checked = configAdminSecondaire.logs;
+        document.getElementById('adminSecondairePersonnalisation').checked = configAdminSecondaire.personnalisation;
+        document.getElementById('adminSecondaireEmail').checked = configAdminSecondaire.email;
+        document.getElementById('adminSecondaireGestionAdmins').checked = configAdminSecondaire.gestionAdmins;
+        document.getElementById('adminSecondaireSuppressionLogs').checked = configAdminSecondaire.suppressionLogs;
+        document.getElementById('adminSecondaireModeSwitch').checked = configAdminSecondaire.modeSwitch;
+        
+        afficherResumePermissions();
         afficher(); 
         afficherJournal();
         afficherBesoins();
@@ -3251,7 +3558,7 @@
         afficherRebut();
         calculerStatistiquesMaintenance();
         
-        if (estAdminPrincipal) {
+        if (estAdminPrincipal || configAdminSecondaire.logs) {
             afficherListeAdmins();
             afficherListeVisiteursEtTechs();
             afficherLogs();
@@ -3326,7 +3633,7 @@
 
     // Gestion des visiteurs, techniciens, services
     window.ajouterVisiteur = async function() {
-        if (!estAdminPrincipal) return;
+        if (!estAdminPrincipal && !configAdminSecondaire.visiteurs) return;
         const newCode = document.getElementById('newVisitorCode').value.trim();
         if (!newCode) return alert("Entrez un code");
         if (visiteurs.includes(newCode)) return alert("Existe déjà");
@@ -3339,7 +3646,7 @@
     };
 
     window.ajouterTechnicien = async function() {
-        if (!estAdminPrincipal) return;
+        if (!estAdminPrincipal && !configAdminSecondaire.techniciens) return;
         const code = document.getElementById('newTechCode').value.trim();
         const nom = document.getElementById('newTechName').value.trim();
         if (!code || !nom) return alert("Code et nom requis");
@@ -3354,7 +3661,7 @@
     };
 
     window.ajouterService = async function() {
-        if (!estAdminPrincipal) return;
+        if (!estAdminPrincipal && !configAdminSecondaire.services) return;
         const code = document.getElementById('newServiceCode').value.trim();
         const nom = document.getElementById('newServiceName').value.trim();
         if (!code || !nom) return alert("Code et nom requis");
@@ -3369,7 +3676,7 @@
     };
 
     window.supprimerVisiteur = async function(code) {
-        if (!estAdminPrincipal) return;
+        if (!estAdminPrincipal && !configAdminSecondaire.visiteurs) return;
         if (confirm(`Supprimer ${code} ?`)) { 
             visiteurs = visiteurs.filter(v => v !== code); 
             await sauvegarderDonneesFirebase('visiteurs', visiteurs); 
@@ -3380,7 +3687,7 @@
     };
 
     window.supprimerTechnicien = async function(code) {
-        if (!estAdminPrincipal) return;
+        if (!estAdminPrincipal && !configAdminSecondaire.techniciens) return;
         if (confirm(`Supprimer le technicien ?`)) { 
             const tech = techniciens.find(t => t.code === code);
             techniciens = techniciens.filter(t => t.code !== code); 
@@ -3392,7 +3699,7 @@
     };
 
     window.supprimerService = async function(code) {
-        if (!estAdminPrincipal) return;
+        if (!estAdminPrincipal && !configAdminSecondaire.services) return;
         if (confirm(`Supprimer le service ?`)) { 
             const serv = services.find(s => s.code === code);
             services = services.filter(s => s.code !== code); 
@@ -3435,9 +3742,37 @@
         }
     }
 
+    // Fonctions pour la configuration visiteur
+    window.sauvegarderConfigVisiteur = function() {
+        configVisiteur = {
+            inventaire: document.getElementById('visitorInventaire').checked,
+            journal: document.getElementById('visitorJournal').checked,
+            besoins: document.getElementById('visitorBesoins').checked,
+            maintenance: document.getElementById('visitorMaintenance').checked,
+            demande: document.getElementById('visitorDemande').checked,
+            rebut: document.getElementById('visitorRebut').checked,
+            planning: document.getElementById('visitorPlanning').checked
+        };
+        sauvegarderDonneesFirebase('configVisiteur', configVisiteur);
+        showNotification('Configuration visiteur sauvegardée');
+        if (currentMode === 'visitor') {
+            configurerMenuParMode();
+        }
+    };
+
+    window.selectionnerToutVisiteur = function(etat) {
+        document.getElementById('visitorInventaire').checked = etat;
+        document.getElementById('visitorJournal').checked = etat;
+        document.getElementById('visitorBesoins').checked = etat;
+        document.getElementById('visitorMaintenance').checked = etat;
+        document.getElementById('visitorDemande').checked = etat;
+        document.getElementById('visitorRebut').checked = etat;
+        document.getElementById('visitorPlanning').checked = etat;
+    };
+
     // Personnalisation
     window.changerFondConnexion = function() {
-        if (!estAdminPrincipal) return;
+        if (!estAdminPrincipal && !configAdminSecondaire.personnalisation) return;
         const color1 = document.getElementById('bgColor1').value;
         const color2 = document.getElementById('bgColor2').value;
         
@@ -3449,7 +3784,7 @@
     };
 
     window.changerFondImage = function(event) {
-        if (!estAdminPrincipal) return;
+        if (!estAdminPrincipal && !configAdminSecondaire.personnalisation) return;
         const file = event.target.files[0];
         if (file) {
             const reader = new FileReader();
@@ -3465,7 +3800,7 @@
     };
 
     window.reinitialiserFond = function() {
-        if (!estAdminPrincipal) return;
+        if (!estAdminPrincipal && !configAdminSecondaire.personnalisation) return;
         localStorage.removeItem('hsjda_bg_color1');
         localStorage.removeItem('hsjda_bg_color2');
         localStorage.removeItem('hsjda_bg_image');
@@ -3475,14 +3810,14 @@
     };
 
     window.changerFondApp = function() {
-        if (!estAdminPrincipal) return;
+        if (!estAdminPrincipal && !configAdminSecondaire.personnalisation) return;
         const color = document.getElementById('appBgColor').value;
         localStorage.setItem('hsjda_app_bg', color);
         document.body.style.backgroundColor = color;
     };
 
     window.changerLogoAdmin = function(event) {
-        if (!estAdminPrincipal) return;
+        if (!estAdminPrincipal && !configAdminSecondaire.personnalisation) return;
         const file = event.target.files[0];
         if (file) {
             const reader = new FileReader();
@@ -3498,7 +3833,7 @@
     };
 
     window.changerLogoApp = function(event) {
-        if (!estAdminPrincipal) return;
+        if (!estAdminPrincipal && !configAdminSecondaire.personnalisation) return;
         const file = event.target.files[0];
         if (file) {
             const reader = new FileReader();
@@ -3522,7 +3857,7 @@
     }
 
     window.ajouterOuModifier = async function() {
-        if (currentMode !== 'admin') return;
+        if (currentMode !== 'admin' && !verifierPermissionAdmin('ajoutEquip')) return;
         const nom = document.getElementById('nom').value.trim();
         const service = document.getElementById('service').value;
         if (!nom || !service) { alert("Nom et service obligatoires"); return; }
@@ -3562,7 +3897,7 @@
     };
 
     window.modifierAppareil = function(index) { 
-        if (currentMode !== 'admin') return; 
+        if (currentMode !== 'admin' && !verifierPermissionAdmin('ajoutEquip')) return; 
         const eq = equipements[index]; 
         document.getElementById('nom').value = eq.nom || ''; 
         document.getElementById('service').value = eq.service || ''; 
@@ -3600,7 +3935,7 @@
     }
 
     window.changerEtat = async function(index) { 
-        if (currentMode !== 'admin') return; 
+        if (currentMode !== 'admin' && !verifierPermissionAdmin('ajoutEquip')) return; 
         if (index >= 0 && index < equipements.length) { 
             equipements[index].etat = equipements[index].etat === 'Fonctionnel' ? 'En Panne' : 'Fonctionnel'; 
             await sauvegarderDonneesFirebase('equipements', equipements); 
@@ -3671,7 +4006,7 @@
         
         equipementsAffiches.forEach((eq, idx) => {
             const etatClass = eq.etat === 'Fonctionnel' ? 'etat-badge' : 'etat-badge panne';
-            const peutModifier = currentMode === 'admin' || currentMode === 'technicien';
+            const peutModifier = currentMode === 'admin' && verifierPermissionAdmin('ajoutEquip') || currentMode === 'technicien';
             const alerteClass = getAlerteClass(eq.datePrev);
             const alerteText = getAlerteText(eq.datePrev);
             
@@ -3694,7 +4029,7 @@
                         ${peutModifier ? `
                             <button class="btn-etat ${eq.etat === 'Fonctionnel' ? '' : 'panne'}" onclick="changerEtat(${realIndex})">🔄</button>
                             <button class="btn-modifier" onclick="modifierAppareil(${realIndex})">✏️</button>
-                            ${currentMode === 'admin' ? `<button class="btn-rebut" onclick="ouvrirModalRebut(${realIndex})" title="Mettre au rebut">🗑️ Mettre au rebut</button>` : ''}
+                            ${(currentMode === 'admin' && verifierPermissionAdmin('rebut')) ? `<button class="btn-rebut" onclick="ouvrirModalRebut(${realIndex})" title="Mettre au rebut">🗑️ Mettre au rebut</button>` : ''}
                         ` : ''}
                         ${currentMode === 'visitor' && configVisiteur.inventaire ? '👁️ Lecture seule' : ''}
                     </div>
@@ -3705,6 +4040,8 @@
 
     window.ajouterIntervention = async function() {
         if (currentMode === 'visitor' || currentMode === 'service') return;
+        if (currentMode === 'admin' && !verifierPermissionAdmin('journal')) return;
+        
         const tech = document.getElementById('techNom').value.trim();
         const service = document.getElementById('serviceInterv').value;
         const equip = document.getElementById('equipInterv').value.trim();
@@ -3728,7 +4065,7 @@
         await sauvegarderDonneesFirebase('interventions', interventions);
         afficherJournal();
         
-        if (estAdminPrincipal) {
+        if (estAdminPrincipal || configAdminSecondaire.logs) {
             ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Ajout intervention par ${tech}`);
         }
         
@@ -3751,12 +4088,12 @@
     };
 
     window.supprimerIntervention = async function(id) {
-        if (currentMode !== 'admin') return;
+        if (currentMode !== 'admin' && !verifierPermissionAdmin('journal')) return;
         if (!confirm("Supprimer cette intervention ?")) return;
         interventions = interventions.filter(i => i.id != id);
         await sauvegarderDonneesFirebase('interventions', interventions);
         afficherJournal();
-        if (estAdminPrincipal) ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', 'Suppression intervention');
+        if (estAdminPrincipal || configAdminSecondaire.logs) ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', 'Suppression intervention');
         showNotification('Intervention supprimée');
         calculerStatistiquesMaintenance();
     };
@@ -3777,7 +4114,7 @@
         }
         
         interventionsAffichees.forEach((iv) => {
-            const peutSupprimer = currentMode === 'admin';
+            const peutSupprimer = currentMode === 'admin' && verifierPermissionAdmin('journal');
             const ligne = document.createElement('tr');
             ligne.innerHTML = `
                 <td>${iv.technicien}</td>
@@ -3802,6 +4139,7 @@
 
     window.ajouterBesoin = async function() {
         if (currentMode === 'visitor' || currentMode === 'service') return;
+        if (currentMode === 'admin' && !verifierPermissionAdmin('besoins')) return;
         
         const dateEmission = document.getElementById('dateEmission').value;
         const designation = document.getElementById('designationBesoin').value.trim();
@@ -3827,7 +4165,7 @@
         expressionsBesoin.unshift(besoin);
         await sauvegarderDonneesFirebase('expressionsBesoin', expressionsBesoin);
         
-        if (estAdminPrincipal) {
+        if (estAdminPrincipal || configAdminSecondaire.logs) {
             ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', `Ajout besoin: ${designation}`);
         }
         
@@ -3844,12 +4182,12 @@
     };
 
     window.supprimerBesoin = async function(id) {
-        if (currentMode !== 'admin') return;
+        if (currentMode !== 'admin' && !verifierPermissionAdmin('besoins')) return;
         if (!confirm("Supprimer cette expression de besoin ?")) return;
         expressionsBesoin = expressionsBesoin.filter(b => b.id != id);
         await sauvegarderDonneesFirebase('expressionsBesoin', expressionsBesoin);
         afficherBesoins();
-        if (estAdminPrincipal) ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', 'Suppression besoin');
+        if (estAdminPrincipal || configAdminSecondaire.logs) ajouterLog(currentAdminInfo?.nom || 'Admin', 'Admin', 'Suppression besoin');
         showNotification('Besoin supprimé');
     };
 
@@ -3898,7 +4236,7 @@
                             <button class="btn-warning" onclick="modifierStatutBesoin(${besoin.id}, 'En cours')">⏳</button>
                             <button class="btn-success" onclick="modifierStatutBesoin(${besoin.id}, 'Réalisé')">✅</button>
                             <button class="btn-etat" onclick="modifierStatutBesoin(${besoin.id}, 'En attente')">⏸️</button>
-                            ${currentMode === 'admin' ? `<button class="btn-danger" onclick="supprimerBesoin(${besoin.id})">🗑️</button>` : ''}
+                            ${(currentMode === 'admin' && verifierPermissionAdmin('besoins')) ? `<button class="btn-danger" onclick="supprimerBesoin(${besoin.id})">🗑️</button>` : ''}
                         ` : ''}
                         ${currentMode === 'visitor' && configVisiteur.besoins ? '👁️ Lecture seule' : ''}
                     </div>
@@ -3997,6 +4335,8 @@
             return;
         }
 
+        if (currentMode === 'admin' && !verifierPermissionAdmin('demandes')) return;
+
         const service = document.getElementById('demandeService').value;
         const nom = document.getElementById('demandeNom').value.trim();
         const nature = document.getElementById('demandeNature').value;
@@ -4026,7 +4366,7 @@
         demandes.unshift(demande);
         await sauvegarderDonneesFirebase('demandes', demandes);
         
-        if (estAdminPrincipal) ajouterLog(currentServiceInfo?.nom || 'Service', 'Service', `Nouvelle demande: ${equipement}`);
+        if (estAdminPrincipal || configAdminSecondaire.logs) ajouterLog(currentServiceInfo?.nom || 'Service', 'Service', `Nouvelle demande: ${equipement}`);
         showNotification('Demande envoyée avec succès !');
         
         document.getElementById('demandeService').value = currentServiceInfo?.nom || '';
@@ -4055,7 +4395,7 @@
         }
 
         demandesAffichees.forEach(demande => {
-            const peutModifier = currentMode === 'admin';
+            const peutModifier = currentMode === 'admin' && verifierPermissionAdmin('demandes');
             const ligne = document.createElement('tr');
             ligne.innerHTML = `
                 <td><strong>${demande.numero}</strong></td>
@@ -4078,7 +4418,7 @@
     }
 
     window.modifierStatutDemande = async function(id, nouveauStatut) {
-        if (currentMode !== 'admin') return;
+        if (currentMode !== 'admin' && !verifierPermissionAdmin('demandes')) return;
         const demande = demandes.find(d => d.id == id);
         if (demande) {
             demande.statut = nouveauStatut;
@@ -4090,8 +4430,8 @@
 
     // Sauvegarde et restauration
     window.sauvegarderDonnees = function() {
-        if (!estAdminPrincipal) {
-            alert("Seul l'administrateur principal peut sauvegarder");
+        if (!estAdminPrincipal && !configAdminSecondaire.sauvegarde) {
+            alert("Vous n'avez pas la permission de sauvegarder");
             return;
         }
         const data = { 
@@ -4106,6 +4446,7 @@
             demandes,
             logsConnexion,
             configVisiteur,
+            configAdminSecondaire,
             date: new Date().toISOString(), 
             version: '7.0' 
         };
@@ -4121,15 +4462,15 @@
     };
 
     window.restaurerDonnees = function() { 
-        if (!estAdminPrincipal) {
-            alert("Seul l'administrateur principal peut restaurer");
+        if (!estAdminPrincipal && !configAdminSecondaire.sauvegarde) {
+            alert("Vous n'avez pas la permission de restaurer");
             return;
         }
         document.getElementById('restoreFile').click(); 
     };
 
     window.importerDonnees = function(event) {
-        if (!estAdminPrincipal) return;
+        if (!estAdminPrincipal && !configAdminSecondaire.sauvegarde) return;
         const file = event.target.files[0]; 
         if (!file) return;
         const reader = new FileReader();
@@ -4181,8 +4522,12 @@
                     configVisiteur = data.configVisiteur;
                     sauvegarderDonneesFirebase('configVisiteur', configVisiteur);
                 }
+                if (data.configAdminSecondaire) {
+                    configAdminSecondaire = data.configAdminSecondaire;
+                    sauvegarderDonneesFirebase('configAdminSecondaire', configAdminSecondaire);
+                }
                 
-                if (estAdminPrincipal) {
+                if (estAdminPrincipal || configAdminSecondaire.logs) {
                     afficherListeAdmins();
                     afficherListeVisiteursEtTechs();
                     afficherLogs();
@@ -4306,7 +4651,6 @@
             sauvegarderDonneesFirebase('equipements', equipements);
         }
     });
-})();
 </script>
 </body>
 </html>
