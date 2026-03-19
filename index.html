@@ -2201,6 +2201,7 @@
     let estAdmin = false;
     let estAdminPrincipal = false;
     let syncInProgress = false;
+    let firebaseInitialized = false;
     
     let equipementEnCoursDeRebut = null;
     
@@ -2218,6 +2219,183 @@
     // Initialisation EmailJS
     emailjs.init("Gg0-z4pm0nEr66hAX");
 
+    // FONCTION D'INITIALISATION FIREBASE - AJOUTÉE
+    async function initialiserFirebase() {
+        try {
+            updateSyncStatus('syncing', 'Initialisation de la base de données...');
+            
+            // Vérifier si les données existent, sinon les créer
+            const collections = [
+                'administrateurs',
+                'equipements',
+                'equipementsRebut',
+                'interventions',
+                'expressionsBesoin',
+                'demandes',
+                'visiteurs',
+                'techniciens',
+                'services',
+                'logsConnexion',
+                'configVisiteur',
+                'permissionsAdmin'
+            ];
+
+            for (const collection of collections) {
+                const docRef = db.collection('data').doc(collection);
+                const docSnap = await docRef.get();
+                
+                if (!docSnap.exists) {
+                    console.log(`Création du document ${collection}...`);
+                    let initialData = [];
+                    
+                    switch(collection) {
+                        case 'administrateurs':
+                            initialData = [{nom: "Admin Principal", code: "HSJDA2026"}];
+                            adminPrincipal = initialData[0];
+                            break;
+                        case 'visiteurs':
+                            initialData = ['VISITEUR2026', 'VISITEUR2025'];
+                            break;
+                        case 'techniciens':
+                            initialData = [
+                                {code:"JEAN123", nom:"Jean KOFFI"},
+                                {code:"MARIE456", nom:"Marie AHO"},
+                                {code:"PAUL789", nom:"Paul KOUASSI"}
+                            ];
+                            break;
+                        case 'services':
+                            initialData = [
+                                {code:"SERV001", nom:"Maternité"},
+                                {code:"SERV002", nom:"Laboratoire"},
+                                {code:"SERV003", nom:"Radiologie"},
+                                {code:"SERV004", nom:"Bloc opératoire"}
+                            ];
+                            break;
+                        case 'equipements':
+                            initialData = [
+                                { 
+                                    matricule: "HSJDA/URG/ECG/2025/001", 
+                                    nom: "Electrocardiographe", 
+                                    service: "URGENCE", 
+                                    marque: "GE", 
+                                    sn: "EC12345", 
+                                    dateAcquisition: "2023-05-12", 
+                                    dateMiseEnService: "2023-06-01", 
+                                    datePrev: "2025-06-01", 
+                                    garantie: "OUI",
+                                    typeMaintenance: "Interne",
+                                    societePrestation: "",
+                                    etat: "Fonctionnel" 
+                                },
+                                { 
+                                    matricule: "HSJDA/LAB/CENT/2025/003", 
+                                    nom: "Centrifugeuse", 
+                                    service: "LABORATOIRE", 
+                                    marque: "Eppendorf", 
+                                    sn: "CEN5544", 
+                                    dateAcquisition: "2022-11-03", 
+                                    dateMiseEnService: "2022-11-20", 
+                                    datePrev: "2024-11-20", 
+                                    garantie: "NON",
+                                    typeMaintenance: "Externe",
+                                    societePrestation: "MED-TECH Services",
+                                    etat: "En Panne" 
+                                }
+                            ];
+                            break;
+                        case 'equipementsRebut':
+                            initialData = [];
+                            break;
+                        case 'interventions':
+                            initialData = [];
+                            break;
+                        case 'expressionsBesoin':
+                            initialData = [];
+                            break;
+                        case 'demandes':
+                            initialData = [];
+                            break;
+                        case 'logsConnexion':
+                            initialData = [];
+                            break;
+                        case 'configVisiteur':
+                            initialData = configVisiteur;
+                            break;
+                        case 'permissionsAdmin':
+                            initialData = permissionsAdmin;
+                            break;
+                    }
+                    
+                    await docRef.set({ valeurs: initialData });
+                    console.log(`Document ${collection} créé avec succès`);
+                }
+            }
+            
+            firebaseInitialized = true;
+            updateSyncStatus('connected', 'Base de données initialisée');
+            
+            // Charger les données après initialisation
+            await chargerDonneesFirebase();
+            
+        } catch (error) {
+            console.error("Erreur lors de l'initialisation Firebase:", error);
+            updateSyncStatus('offline', 'Erreur d\'initialisation. Utilisation des données locales.');
+            
+            // Initialiser avec des données par défaut en cas d'erreur
+            administrateurs = [{nom: "Admin Principal", code: "HSJDA2026"}];
+            adminPrincipal = administrateurs[0];
+            visiteurs = ['VISITEUR2026', 'VISITEUR2025'];
+            techniciens = [
+                {code:"JEAN123", nom:"Jean KOFFI"},
+                {code:"MARIE456", nom:"Marie AHO"},
+                {code:"PAUL789", nom:"Paul KOUASSI"}
+            ];
+            services = [
+                {code:"SERV001", nom:"Maternité"},
+                {code:"SERV002", nom:"Laboratoire"},
+                {code:"SERV003", nom:"Radiologie"},
+                {code:"SERV004", nom:"Bloc opératoire"}
+            ];
+            equipements = [
+                { 
+                    matricule: "HSJDA/URG/ECG/2025/001", 
+                    nom: "Electrocardiographe", 
+                    service: "URGENCE", 
+                    marque: "GE", 
+                    sn: "EC12345", 
+                    dateAcquisition: "2023-05-12", 
+                    dateMiseEnService: "2023-06-01", 
+                    datePrev: "2025-06-01", 
+                    garantie: "OUI",
+                    typeMaintenance: "Interne",
+                    societePrestation: "",
+                    etat: "Fonctionnel" 
+                },
+                { 
+                    matricule: "HSJDA/LAB/CENT/2025/003", 
+                    nom: "Centrifugeuse", 
+                    service: "LABORATOIRE", 
+                    marque: "Eppendorf", 
+                    sn: "CEN5544", 
+                    dateAcquisition: "2022-11-03", 
+                    dateMiseEnService: "2022-11-20", 
+                    datePrev: "2024-11-20", 
+                    garantie: "NON",
+                    typeMaintenance: "Externe",
+                    societePrestation: "MED-TECH Services",
+                    etat: "En Panne" 
+                }
+            ];
+            equipementsRebut = [];
+            interventions = [];
+            expressionsBesoin = [];
+            demandes = [];
+            logsConnexion = [];
+            
+            showNotification('Mode hors ligne - données locales utilisées', 'warning');
+        }
+    }
+
     // Chargement depuis Firebase
     async function chargerDonneesFirebase() {
         try {
@@ -2226,10 +2404,6 @@
             if (adminsDoc.exists) {
                 administrateurs = adminsDoc.data().valeurs || [];
                 adminPrincipal = administrateurs[0];
-            } else {
-                administrateurs = [{nom: "Admin Principal", code: "HSJDA2026"}];
-                adminPrincipal = administrateurs[0];
-                await db.collection('data').doc('administrateurs').set({valeurs: administrateurs});
             }
             
             // Charger équipements
@@ -2292,7 +2466,7 @@
                 configVisiteur = configDoc.data().valeurs || configVisiteur;
             }
             
-            // NOUVEAU : Charger permissions admin
+            // Charger permissions admin
             const permDoc = await db.collection('data').doc('permissionsAdmin').get();
             if (permDoc.exists) {
                 permissionsAdmin = permDoc.data().valeurs || permissionsAdmin;
@@ -2302,13 +2476,17 @@
             
         } catch (error) {
             console.error("Erreur chargement Firebase:", error);
-            updateSyncStatus('offline', 'Erreur de synchronisation');
+            updateSyncStatus('offline', 'Erreur de synchronisation - Mode hors ligne');
         }
     }
 
     // Sauvegarde vers Firebase
     async function sauvegarderDonneesFirebase(type, valeurs) {
         if (syncInProgress) return;
+        if (!firebaseInitialized) {
+            console.log("Firebase non initialisé, sauvegarde locale uniquement");
+            return;
+        }
         
         try {
             syncInProgress = true;
@@ -2322,38 +2500,39 @@
 
     // Écouter les changements en temps réel
     function ecouterChangements() {
+        if (!firebaseInitialized) return;
+        
         db.collection('data').doc('equipements').onSnapshot((doc) => {
             if (doc.exists && !syncInProgress) {
                 equipements = doc.data().valeurs || [];
-                afficher();
+                if (document.querySelector('.page.active')?.id === 'pageInventaire') afficher();
             }
         });
         
         db.collection('data').doc('interventions').onSnapshot((doc) => {
             if (doc.exists && !syncInProgress) {
                 interventions = doc.data().valeurs || [];
-                afficherJournal();
+                if (document.querySelector('.page.active')?.id === 'pageJournal') afficherJournal();
             }
         });
         
         db.collection('data').doc('expressionsBesoin').onSnapshot((doc) => {
             if (doc.exists && !syncInProgress) {
                 expressionsBesoin = doc.data().valeurs || [];
-                afficherBesoins();
+                if (document.querySelector('.page.active')?.id === 'pageBesoins') afficherBesoins();
             }
         });
         
         db.collection('data').doc('demandes').onSnapshot((doc) => {
             if (doc.exists && !syncInProgress) {
                 demandes = doc.data().valeurs || [];
-                afficherDemandes();
+                if (document.querySelector('.page.active')?.id === 'pageDemande') afficherDemandes();
             }
         });
     }
 
-    // Initialisation
-    chargerDonneesFirebase();
-    ecouterChangements();
+    // Lancer l'initialisation au chargement
+    initialiserFirebase();
 
     // NOUVELLES FONCTIONS : Gestion des permissions administrateur
     window.sauvegarderPermissionsAdmin = async function() {
@@ -2598,14 +2777,14 @@
             syncBadge.textContent = 'Hors ligne';
             syncBadge.style.backgroundColor = '#e74c3c';
         }
-        if (message) showNotification(message);
+        if (message) showNotification(message, 'warning');
     }
 
     // Notification
     function showNotification(message, type = 'success') {
         const notif = document.getElementById('notification');
         notif.textContent = message;
-        notif.style.backgroundColor = type === 'success' ? '#27ae60' : '#e74c3c';
+        notif.style.backgroundColor = type === 'success' ? '#27ae60' : type === 'warning' ? '#f39c12' : '#e74c3c';
         notif.style.display = 'block';
         setTimeout(() => { notif.style.display = 'none'; }, 3000);
     }
@@ -3666,6 +3845,9 @@
             afficherLogs();
             afficherTableauPermissions();
         }
+        
+        // Écouter les changements Firebase après connexion
+        ecouterChangements();
     }
 
     function afficherErreur() { 
@@ -4764,44 +4946,6 @@
         
         doc.save("Journal_Interventions_HSJDA.pdf");
     };
-
-    document.addEventListener('DOMContentLoaded', () => {
-        document.getElementById('passInput').addEventListener('keypress', (e) => { 
-            if (e.key === 'Enter') verifierCode('admin'); 
-        });
-        
-        if (equipements.length === 0) {
-            equipements.push({ 
-                matricule: "HSJDA/URG/ECG/2025/001", 
-                nom: "Electrocardiographe", 
-                service: "URGENCE", 
-                marque: "GE", 
-                sn: "EC12345", 
-                dateAcquisition: "2023-05-12", 
-                dateMiseEnService: "2023-06-01", 
-                datePrev: "2025-06-01", 
-                garantie: "OUI",
-                typeMaintenance: "Interne",
-                societePrestation: "",
-                etat: "Fonctionnel" 
-            });
-            equipements.push({ 
-                matricule: "HSJDA/LAB/CENT/2025/003", 
-                nom: "Centrifugeuse", 
-                service: "LABORATOIRE", 
-                marque: "Eppendorf", 
-                sn: "CEN5544", 
-                dateAcquisition: "2022-11-03", 
-                dateMiseEnService: "2022-11-20", 
-                datePrev: "2024-11-20", 
-                garantie: "NON",
-                typeMaintenance: "Externe",
-                societePrestation: "MED-TECH Services",
-                etat: "En Panne" 
-            });
-            sauvegarderDonneesFirebase('equipements', equipements);
-        }
-    });
 </script>
 </body>
 </html>
